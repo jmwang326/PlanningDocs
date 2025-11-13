@@ -190,21 +190,63 @@ What's hard, what's tuning-dependent, and where failures occur.
 
 ## Learning Risks
 
-### Contaminated Portal Timing
-**HARD: Group behavior vs individual**
+---
+
+## Vehicle Association Complexity
+
+### Sporadic Interior Detections
+**HARD: Unreliable visibility through windows**
 
 **Challenge:**
-- Group of 3 walks slowly through portal (8 seconds)
-- Solo person walks quickly (2 seconds)
-- Averaging → portal window too wide
+- Window glare, tint, angle = intermittent detection
+- Driver visible, passenger not (or vice versa)
+- Face may be visible one frame, occluded next
 
 **Risk:**
-- False candidates matched (unrelated tracks)
+- Miss face match opportunity
+- Can't distinguish driver from passenger
 
 **Mitigation:**
-- Only learn from solo track observations
-- Mark multi-person merges as "contaminated"
-- Exclude from timing statistics
+- Don't require continuous detection (treat as bonus evidence)
+- Any face match during journey → strengthens assignment
+- Accept gaps (timeline shows "in vehicle" without continuous track)
+
+---
+
+### Multi-Occupant Exit Assignment
+**HARD: Which person exits?**
+
+**Challenge:**
+- Two people enter vehicle
+- Vehicle moves across cameras
+- One person exits → which one?
+
+**Risk:**
+- Wrong person assigned to exit track
+- Breaks timeline for both agents
+
+**Mitigation:**
+- Face match if available (exit track shows face)
+- Process of elimination (other agent seen elsewhere)
+- Accept uncertainty ("possibly Agent A or B")
+- LLM/human review for ambiguous cases
+
+---
+
+### Driver vs Passenger
+**MEDIUM: Different exit points**
+
+**Challenge:**
+- Driver exits at front, passenger at back
+- Spatial position may indicate role
+- But swapping possible (passenger becomes driver)
+
+**Risk:**
+- Assume driver always front exit → wrong if passenger drove
+
+**Mitigation:**
+- Don't assume roles (just track occupancy)
+- Let evidence determine assignment (face, timing, elimination)
 
 ---
 

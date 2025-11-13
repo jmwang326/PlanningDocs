@@ -6,14 +6,28 @@ This document provides instructions for AI agents working with the MarengoCam pl
 ## Documentation Hierarchy
 
 ### Level Structure
+
+**Strategic Levels (L1-L9):**
 - **Level 0**: This document - meta-instructions for agents (evolves continuously)
 - **Level 1**: Mission and philosophy (core problem, values, goals)
 - **Level 2**: Strategy (what and why, non-technical approach)
 - **Level 3**: Tactics (how and when, non-technical, component-specific)
 - **Level 4**: Complexity and risks (what's hard, tuning-dependent, failure modes)
+- **Level 5**: TBD (open for future strategic topics)
 - **Level 6**: Deployment plan (phased rollout, timelines, success criteria)
+
+**Reference Levels (L10):**
 - **Level 10**: Nomenclature (terminology reference, the "dictionary")
-- **Level 11-13**: Technical specifications (corresponding to tactical levels)
+
+**Technical Levels (L11-L19):**
+- **Level 11**: Technical specs corresponding to L1 topics
+- **Level 12**: Technical specs corresponding to L2 topics
+- **Level 13**: Technical specs corresponding to L3 topics
+- **Level 14**: Technical specs corresponding to L4 topics
+- **Level 15**: Technical specs corresponding to L5 topics
+- **Level 16**: Technical specs corresponding to L6 topics
+
+**Pattern:** L{N} strategic → L{N+10} technical
 
 ### Naming Conventions
 - Core documents: `L{N}_{Topic}.md`
@@ -93,7 +107,49 @@ Split a level into multiple files when:
 **What belongs:** APIs, data structures, algorithms, schemas, code specs
 **What doesn't:** Philosophy or strategy (that's L1-L3)
 
+## Uncategorized Items / Work Queue
+
+**Items awaiting proper home in hierarchy:**
+
+### Bootstrap/Prepopulation Projects
+**Status:** Strategic placement unclear (L5?) + technical details needed (L15?)
+**Description:**
+- YOLO remote API for legacy footage processing
+- Re-ID database construction from historical tracks
+- Face ID library seeding from historical footage
+- Inter-camera grid learning from historical transitions (6×6 or other)
+
+**Questions:**
+- Is this L5_Bootstrap (strategy) + L15_Bootstrap (technical)?
+- Or part of L6_Deployment as "Phase 0: Seed Data"?
+
+### Process of Elimination Mechanics
+**Status:** Mentioned in L2, needs detail
+**Description:** Agent A seen elsewhere → rules out Track X = Agent A, cascades
+**Questions:**
+- Tactical detail in L3_Merging?
+- Technical implementation in L12_Merging?
+
+### Multi-Person Merge Strategy
+**Status:** Mentioned in L4_Complexity, underspecified
+**Description:** 2+ people walk together, tracks split on other side
+**Questions:**
+- Expand in L2_Strategy or L3_Merging?
+- L4 currently says "mark as possibly_switched" - enough?
+
+### Nomenclature Update
+**Status:** L10_Nomenclature has outdated terms
+**Description:** Still references 32×32, 8×8 grids (removed from new framework)
+**Action needed:** Update or mark sections as deprecated
+
+### rebootinst.md
+**Status:** Bootstrap document for this reorganization
+**Question:** Archive to deprecated/ or keep as project history?
+
+---
+
 ## Version Control
 - **Level 0 evolves continuously** - rewrite as framework clarifies
 - Refinements to structure should be discussed and approved
 - This document reflects current understanding of hierarchy
+- **Uncategorized section** above tracks items awaiting proper placement

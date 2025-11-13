@@ -19,8 +19,7 @@ How we merge track segments across cameras to build agent timelines.
 
 **System uses portals to:**
 - Filter candidates (only check connected cameras)
-- Learn transition timing from validated merges
-- Reject impossible transitions (too fast/slow)
+- Note: Portal timing NOT used (variance too high, see L2D_Strategy)
 
 ## Evidence Evaluation
 
@@ -52,7 +51,7 @@ How we merge track segments across cameras to build agent timelines.
 **3. Portal Check** (user configuration)
 - Track ends at portal on Camera A
 - Next track starts at corresponding portal on Camera B
-- Timing within learned window → high confidence candidate
+- Spatial correlation (not timing) → candidate
 
 **4. LLM Adjudication** (expensive, ambiguous cases)
 - Present image panels from both tracks
@@ -70,7 +69,7 @@ How we merge track segments across cameras to build agent timelines.
 **Track may belong to multiple agents:**
 - Two people walk through portal together
 - Tracks split on other side
-- System marks: "Track X possibly Agent A (60%) or Agent B (40%)"
+- System marks: "Track X possibly Agent A or Agent B" (no probabilities)
 
 ### Uncertainty Persistence
 **Don't force wrong merges:**
@@ -92,11 +91,35 @@ How we merge track segments across cameras to build agent timelines.
 - Next appearance: auto-merge via face match
 - Known people require less LLM/human review
 
-### Portal Timing
-**Tightens windows:**
-- Initial: wide window (max_time = 10s)
-- After validations: learn typical_time (e.g., 2s ± 1s)
-- Reject candidates outside learned window
+## Vehicle Association Tactics
+
+### Entry Detection
+**When person track ends near vehicle:**
+- Temporal correlation: person disappears within ~5s of vehicle movement
+- Spatial correlation: person last seen within vehicle proximity zone
+- Agent state → `in_vehicle(V)`
+- Vehicle state → `occupied_by([Agent_A])`
+
+### Sporadic Interior Detections
+**YOLO detects person through windows (inconsistent):**
+- Don't require frame-to-frame continuity
+- Each detection: attempt face match against occupant candidates
+- Face match → strengthens assignment
+- No face → uncertain, but presence noted
+
+### Exit Detection
+**When vehicle parks and person appears:**
+- Vehicle stops → state changes to `parked`
+- Person track starts near vehicle → merge candidate
+- Evidence: timing + spatial proximity + (optional) face match
+- If multiple occupants: process of elimination (who else unaccounted for?)
+
+### Multi-Occupant Handling
+**Multiple people enter vehicle:**
+- Vehicle `occupied_by([A, possibly B, possibly C])`
+- Sporadic detections may identify some (face visible through window)
+- Exit assignment: use face match if available, otherwise uncertain
+- Accept uncertainty: "Vehicle had 2 people, 1 exited (possibly A or B)"
 
 ## Related Documents
 - **L2 (Strategy):** Why evidence hierarchy and uncertainty handling

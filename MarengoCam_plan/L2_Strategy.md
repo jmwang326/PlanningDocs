@@ -81,10 +81,15 @@ Non-technical description of **what** we're doing and **why** this approach solv
 **Location Uncertainty:**
 - Agent exists but current location unknown
 - Example: Person enters building, not visible for 10 minutes
+- Example: Person enters vehicle, vehicle moves across cameras
 
 **Assignment Uncertainty:**
 - Can't determine if Track X belongs to existing agent or is new agent
 - Example: Face occluded, timing fits multiple candidates
+
+**Vehicle Association Uncertainty:**
+- Person enters vehicle, which person exits?
+- Example: Two people enter car, car moves, one person exits (driver or passenger?)
 
 ### Handling Uncertainty
 
@@ -101,6 +106,44 @@ Non-technical description of **what** we're doing and **why** this approach solv
 **Process of elimination:**
 - Agent A seen elsewhere → rules out Track X belonging to Agent A
 - Cascades: ruling out candidates increases confidence in remaining
+
+## Strategy for Vehicle Association
+
+### Observable Evidence
+**What we can detect:**
+- Person track ends near vehicle (temporal/spatial correlation)
+- Vehicle track starts moving
+- Sporadic person detections inside vehicle (YOLO through windows)
+- Vehicle parks, person track starts nearby (exit correlation)
+
+**What we use:**
+- Entry correlation: person disappears + vehicle moves → `in_vehicle` state
+- Sporadic interior detections: confirms occupancy, may provide face match
+- Exit correlation: vehicle parks + person appears → merge candidate
+- Process of elimination: other agents accounted for → increases confidence
+
+### Agent States
+**Person agent states:**
+- `visible` - person track active
+- `in_vehicle(V)` - entered vehicle V, vehicle tracked
+- `in_structure` - entered building
+- `unknown` - disappeared, no association
+
+**Vehicle agent states:**
+- `parked` - stationary
+- `moving` - tracked across cameras
+- `occupied_by([A, possibly B])` - who's inside (with uncertainty)
+
+### Strategy
+**Don't force person→vehicle assignments:**
+- Multiple people near vehicle → multi-assignment (`possibly A or B in vehicle`)
+- Sporadic interior detection → confirmation (face match strengthens assignment)
+- Exit uncertainty → process of elimination (who else is unaccounted for?)
+
+**Accept gaps:**
+- Person in vehicle has no continuous track (sporadic detections only)
+- Timeline shows: "Agent A entered vehicle, vehicle moved, Agent A exited"
+- Gaps acceptable (forensic reconstruction, not real-time tracking)
 
 ## Related Documents
 - **L1 (Mission):** Why we're solving this problem (core values, goals)
