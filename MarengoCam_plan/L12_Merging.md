@@ -150,8 +150,9 @@ class PersonAgent:
 ```python
 class VehicleAgent:
     agent_id: int
-    state: Literal["parked", "moving"]
+    state: Literal["parked", "moving", "in_structure", "offscreen"]
     occupants: List[OccupantAssignment]
+    last_seen_timestamp: float
 
 class OccupantAssignment:
     agent_id: int
@@ -289,6 +290,51 @@ def rule_out_vehicle_occupant(agent_id, timestamp):
                 # Cascade: if only one occupant remains, increase confidence
                 if len(vehicle.occupants) == 1:
                     vehicle.occupants[0].validated = True
+```
+
+### Person-in-Vehicle Merge Exemption
+```python
+def find_merge_candidates(person_agent):
+    """
+    Find merge candidates for person tracks
+
+    IMPORTANT: Skip person if in vehicle
+    """
+    if person_agent.state == "in_vehicle":
+        # Person movement is vehicle movement
+        # Don't look for person→person merges across cameras
+        # Vehicle track is the proxy
+        return []
+
+    # Normal merge candidate logic for visible/in_structure/unknown
+    return find_cross_camera_candidates(person_agent)
+```
+
+### Vehicle Portal Transitions
+```python
+def detect_vehicle_portal_transition(vehicle_track, portal):
+    """
+    Vehicle can enter/exit garage (portal: garage door)
+
+    State transitions:
+    - moving → in_structure (entered garage)
+    - in_structure → moving (exited garage)
+    - moving → offscreen (left property via driveway portal)
+    """
+    if portal.type == "garage_door":
+        if vehicle_track.direction == "entering":
+            vehicle_agent.state = "in_structure"
+        elif vehicle_track.direction == "exiting":
+            vehicle_agent.state = "moving"
+
+    elif portal.type == "property_exit":
+        vehicle_agent.state = "offscreen"
+
+        # Occupants also offscreen (still in vehicle)
+        for occupant in vehicle_agent.occupants:
+            person_agent = get_agent(occupant.agent_id)
+            # Person remains in_vehicle state
+            # But timeline notes "left property in Vehicle V"
 ```
 
 ## Related Documents

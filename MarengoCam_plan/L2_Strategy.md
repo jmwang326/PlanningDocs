@@ -130,8 +130,10 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - `unknown` - disappeared, no association
 
 **Vehicle agent states:**
-- `parked` - stationary
+- `parked` - stationary, visible
 - `moving` - tracked across cameras
+- `in_structure` - entered garage/carport (portal: garage door)
+- `offscreen` - left property or out of camera view
 - `occupied_by([A, possibly B])` - who's inside (with uncertainty)
 
 ### Strategy
@@ -144,6 +146,12 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - Person in vehicle has no continuous track (sporadic detections only)
 - Timeline shows: "Agent A entered vehicle, vehicle moved, Agent A exited"
 - Gaps acceptable (forensic reconstruction, not real-time tracking)
+
+**Person-in-vehicle exemptions:**
+- Person with `in_vehicle` state exempt from normal cross-camera merge rules
+- Can't walk camera-to-camera while in car (vehicle does the moving)
+- Person track effectively "paused" until vehicle parks and person exits
+- Vehicle track becomes proxy for person movement
 
 ## Related Documents
 - **L1 (Mission):** Why we're solving this problem (core values, goals)

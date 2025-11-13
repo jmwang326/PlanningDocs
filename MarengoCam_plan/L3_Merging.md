@@ -121,6 +121,24 @@ How we merge track segments across cameras to build agent timelines.
 - Exit assignment: use face match if available, otherwise uncertain
 - Accept uncertainty: "Vehicle had 2 people, 1 exited (possibly A or B)"
 
+### Vehicle Portal Transitions
+**Garage doors:**
+- Vehicle enters garage → state: `in_structure`
+- Vehicle exits garage → state: `moving`
+- Portal type: `garage_door` (user-configured)
+
+**Property exits:**
+- Vehicle leaves via driveway → state: `offscreen`
+- Portal type: `property_exit`
+- Occupants remain `in_vehicle` (timeline: "left property in Vehicle V")
+
+### Person-in-Vehicle Merge Exemption
+**Critical rule:**
+- Person with `in_vehicle` state skipped during cross-camera person merging
+- Person can't walk camera-to-camera while in car
+- Vehicle track is proxy for person movement
+- Only look for person merges when person exits vehicle (state → `visible`)
+
 ## Related Documents
 - **L2 (Strategy):** Why evidence hierarchy and uncertainty handling
 - **L4 (Complexity):** Where merging gets complicated
