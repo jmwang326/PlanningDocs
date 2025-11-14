@@ -34,6 +34,33 @@ Multi-camera surveillance produces **disconnected observations**:
 - LLMs (adjudicate ambiguous cases)
 - Human-in-loop (validate and teach system)
 
+## Core Use Case: Security
+
+While real-time alarms are out of scope, the system's ultimate value lies in answering the most critical security question: **Is there an unknown person on the property, and how did they get here?** There is a profound difference between a known person, like a spouse, arriving via a normal entry point and an unidentified individual appearing in the backyard without having passed through a gate. This system is designed to provide that crucial context.
+
+**Primary threat model: Unknown person appears on property.**
+
+**Example scenario:**
+- Person climbs over fence (no entry portal)
+- Walks across cameras A→B→C
+- Enters garage via side door
+
+**What matters:**
+- **Who:** Unknown vs known person (face recognition)
+- **Where:** Path through property (track merging)
+- **When:** Timeline of activity (temporal reconstruction)
+
+**What doesn't matter (out of scope):**
+- Real-time alarms (handled by existing motion detection)
+- Behavioral predictions ("unusual route")
+- Alert fatigue reduction (filtering noise helps, but not the goal)
+
+**This system answers:** "What happened?" not "Should I be notified?"
+
+Forensic reconstruction enables review after-the-fact. Timeline shows complete picture: where unknown person came from, where they went, how long they stayed.
+
+**Note:** Real-time alerting, alarm zones, and notification logic are handled by existing systems (e.g., Blue Iris motion detection). This system focuses on **post-event reconstruction** and **identity tracking**.
+
 ## Core Values
 
 ### Agent-Centric Thinking
@@ -83,6 +110,15 @@ Multi-camera surveillance produces **disconnected observations**:
 - High impact: "Person A merged with Person B" → timeline broken, needs correction
 
 **Why:** Over-engineering low-impact edge cases wastes time. Focus precision where it matters.
+
+### Learn from Clean Data
+**Garbage in, garbage out.** The system's learned knowledge, especially inter-camera travel times, is only as good as the data it learns from.
+- A group of three people walking through a door will have a different travel time than a single person.
+- An ambiguous merge that was incorrectly resolved should not pollute the timing data.
+
+**Principle:** Only update core system knowledge (like the `6x6` grid timings) from high-confidence, unambiguous, single-agent observations. Merges involving groups or uncertainty are still valuable for tracking agents, but they are excluded from the learning process.
+
+**Why:** This prevents the system's core understanding of the environment from being skewed by outliers or ambiguous situations, leading to more reliable merge decisions over time.
 
 ## Goals
 

@@ -29,14 +29,14 @@
 
 **Identity Progression:**
 - Starts as `Unknown-N` (sequential numbering)
-- Promoted via face recognition (confidence ≥0.90) or validated merge
+- Promoted via face recognition (confidence ≥ [Face Recognition Threshold]) or validated merge
 - Never deleted, only terminated
 
 **Usage Examples:**
 ```python
 agent.id = "A_20231107_001"  # agent_ prefix
 agent.type = "person" | "vehicle" | "animal"
-agent.current_state = {'visible': True, 'camera': 'FrontDoor', 'cell_32x32': (15,20)}
+agent.current_state = {'visible': True, 'camera': 'FrontDoor', 'cell_6x6': (3,4)}
 ```
 
 ---
@@ -47,8 +47,8 @@ agent.current_state = {'visible': True, 'camera': 'FrontDoor', 'cell_32x32': (15
 **Contains:**
 - `camera` - Camera ID where segment observed
 - `start_time`, `end_time` - UTC timestamps
-- `entry_cell_32x32`, `exit_cell_32x32` - Where agent entered/exited frame
-- `detections[]` - Frame-by-frame bounding boxes and confidences
+- `entry_cell_6x6`, `exit_cell_6x6` - Where agent entered/exited frame, in 6x6 grid coordinates.
+- `detections[]` - Frame-by-frame bounding boxes and confidences from the YOLO tracker.
 - `quality_score` - For image selection (bbox_area × detection_confidence)
 
 **Relationship:** Multiple track segments can belong to one agent after merging.
@@ -72,7 +72,7 @@ segment.duration = end_time - start_time  # Seconds
 - `bbox` - (x, y, width, height) in pixels
 - `class` - "person" | "vehicle" | "animal"
 - `confidence` - YOLO detection confidence [0.0, 1.0]
-- `cell_32x32` - Grid cell containing bbox centroid
+- `cell_6x6` - Grid cell of the 6x6 grid containing the bbox centroid.
 
 **Relationship:** Multiple detections (frame-to-frame) form a track segment.
 
@@ -87,66 +87,30 @@ detection.cell_32x32 = (12, 18)  # Row, col
 
 ---
 
-## Grid Systems (Dual-Grid Architecture)
+## Grid Systems
 
-### 32×32 Intra-Camera Grid
-**Purpose:** Track agent movement within single camera, prevent ID swaps.
+### 6x6 Inter-Camera Adjacency Grid
+**Purpose:** Learn and store the minimum travel time between cells of a camera pair to enable plausible track merging.
 
 **Specifications:**
-- **Cell count:** 1024 cells per camera (32 rows × 32 cols)
-- **Cell size:** Uniform (not perspective-aware)
-- **Resolution:** Pixel-level tracking with grid for spatial consistency
-- **Mapping:** `cell_32x32 = (row, col)` where 0 ≤ row, col < 32
+- **Matrix:** A `6x6` matrix is maintained for each directed camera pair and for each agent class (e.g., `person`, `vehicle`).
+- **Cell Value:** Stores the minimum observed travel time in milliseconds between a source camera's exit cell and a destination camera's entry cell.
+- **Overlap:** A time of `0` indicates a direct camera overlap zone.
+- **Unlearned:** A value of `-1` (or `MAX_INT`) represents an unlearned path.
 
-**Height Calibration:**
-- Learned per `[camera][row][col]` → median_bbox_height
-- Updated online from observations
-- Used for depth normalization in movement calculation
-
-**Anti-ID-Swap Logic:**
-- Spatial continuity checks (jump >5 cells → flag `possibly_switched`)
-- Motion vector consistency (angle change >90° → flag)
-- Cross-over detection (track intersection → flag both)
+**Learning:**
+- The grid is populated and refined over time by recording the time deltas from high-confidence, validated merges. The system always stores the *lowest* observed time.
 
 **Usage Examples:**
 ```python
-cell_32x32 = get_cell_32x32(bbox_center)  # Returns (row, col)
-depth_factor = height_calibration[camera][row][col]
-manhattan_distance(cell_a, cell_b)  # Cell-level distance
+min_travel_time = grid.get_time('FrontDoor', 'Driveway', 'person', (5, 2), (0, 3))
+if min_travel_time == 0:
+    # This is an overlap zone
 ```
 
-**Always write as:** "32×32 grid" or "intra-camera grid"
+**Always write as:** "6x6 grid" or "inter-camera grid"
 
-**NOT:** "14×9", "12×12", "perspective grid" (outdated)
-
----
-
-### 8×8 Inter-Camera Grid
-**Purpose:** Learn adjacency between cameras, correlate cross-camera activity.
-
-**Specifications:**
-- **Cell count:** 64 cells per camera (8 rows × 8 cols)
-- **Mapping:** Clean 4:1 downsampling from 32×32
-  - `row_8 = row_32 // 4`
-  - `col_8 = col_32 // 4`
-- **Tractability:** 64×64 = 4K edges per camera pair (vs 1M for 32×32)
-
-**Edges:**
-- Directed connections: `(camera_A, cell_8x8_A) → (camera_B, cell_8x8_B)`
-- Properties: `min_time`, `typical_time`, `max_time`, `support_count`, `confidence`
-- Class-agnostic (single edge for all agent types)
-- Learned from validated single-agent observations only
-
-**Usage Examples:**
-```python
-cell_8x8 = to_8x8(cell_32x32)  # (row_32 // 4, col_32 // 4)
-edges = get_edges_from(camera, cell_8x8)  # Query learned adjacency
-edge.typical_time  # Median travel time (50th percentile)
-```
-
-**Always write as:** "8×8 grid" or "inter-camera grid"
-
-**NOT:** "adjacency grid", "correlation grid"
+**NOT:** "32x32 grid", "8x8 grid", "adjacency matrix"
 
 ---
 
@@ -197,21 +161,16 @@ edge.typical_time  # Median travel time (50th percentile)
 ---
 
 ### Active
-**Definition:** At least one agent confirmed with ≥3.0 seconds sustained movement.
+**Definition:** At least one persistent agent track is being reported by the YOLO tracker.
 
 **Behavior:**
 - Acquisition: 10 FPS (sub + main profiles)
-- Inference: High (100% sampling)
+- Inference: High (handled by tracker)
 - Frame persistence: Yes (all sub + main frames saved)
 - Main profile: Captured for Active cameras
 
-**Promotion Criteria:**
-- Sustained movement ≥3.0 seconds (cumulative, gap tolerance 0.2-0.4s)
-- Motion in real-world distance (not just bbox jitter)
-
 **Transitions:**
-- → Post: No detections for quiet_window_s (2-3 seconds)
-- ← Armed: Can re-activate if new detection during Post
+- → Post: YOLO tracker has lost all tracks for `[quiet_window_s]`.
 
 **Always write as:** "Active" (capitalized)
 
@@ -270,9 +229,9 @@ edge.typical_time  # Median travel time (50th percentile)
 **Definition:** Automatic merge without human/LLM review.
 
 **Triggers:**
-- Known overlap (Δt ≈ 0, validated from data)
-- High-confidence face match (≥0.90)
-- License plate match (vehicles)
+- Plausible transition according to the `6x6` grid with no other competing candidates.
+- High-confidence face match (≥ [Face Recognition Threshold]).
+- License plate match (vehicles).
 
 **Outcome:** Track segments immediately combined into single agent.
 
@@ -488,17 +447,10 @@ edge.typical_time  # Median travel time (50th percentile)
 **Definition:** Apply configuration changes without restarting services.
 
 **Mechanism:**
-- Watch config file every 5s
-- Validate schema before applying
-- Dry-run 60s with auto-rollback if errors spike
-- Version stamping (SHA256) on all artifacts
-
-**CLI Commands:**
-```bash
-marengo config reload
-marengo config rollback --version <sha256>
-marengo config validate
-```
+- Watch config files for changes.
+- Validate schema before applying.
+- Dry-run with auto-rollback if errors spike.
+- Version stamping on all artifacts.
 
 **Always write as:** "hot-reload" (hyphenated, lowercase)
 
@@ -508,27 +460,9 @@ marengo config validate
 
 ## Time Windows & Thresholds
 
-### Sustained Movement Threshold
-**Value:** ≥3.0 seconds
-
-**Purpose:** Promote camera to Active (distinguish real activity from noise).
-
-**Calculation:**
-- Cumulative movement duration (gaps ≤0.2-0.4s ignored)
-- Real-world distance (normalized by depth calibration)
-- Not just bbox jitter
-
-**Always write as:** "3.0 seconds" or "≥3s"
-
-**NOT:** "three seconds", "3 sec", "3000ms"
-
----
-
 ### Travel Time
 **Definitions:**
-- **min_time** - Minimum observed Δt for edge (floor = frame interval)
-- **typical_time** - Median Δt (50th percentile)
-- **max_time** - 95th percentile for candidate gating
+- **min_time** - The minimum observed travel time (Δt) between two cells in the `6x6` grid.
 
 **Usage:** Gating merge candidates, neighbor boost timing.
 
@@ -569,8 +503,8 @@ marengo config validate
 
 **Includes:**
 - Agent tracks and merge decisions
-- Learned edges (8×8 inter-camera)
-- Height calibration (32×32)
+- Learned edges (`6x6` inter-camera grid)
+- Height calibration data
 - Face recognition results
 - Human corrections
 
@@ -599,12 +533,12 @@ marengo config validate
 **Retention:** 12 weeks rolling
 
 **Contents:**
-- Learned edges (8×8 inter-camera adjacency)
-- Height calibration (32×32 per-cell depth)
+- Learned `6x6` inter-camera adjacency grids.
+- Height calibration data.
 
 **Frequency:** Weekly automated backups
 
-**Purpose:** Recovery, visualization, debugging adjacency learning.
+**Purpose:** Recovery, visualization, and debugging of adjacency learning.
 
 **Always write as:** "grid snapshots" (lowercase)
 
@@ -621,9 +555,9 @@ marengo config validate
 - Acquisition (Blue Iris integration)
 - Motion gate
 - Inference scheduler
-- Detector (YOLOv8)
-- Intra-camera tracking (32×32)
-- Cross-camera merging (8×8)
+- Detector (YOLO with tracking)
+- Intra-camera tracking (handled by YOLO tracker)
+- Cross-camera merging (`6x6` grid)
 - Archiver
 - Timeline viewer
 
@@ -677,7 +611,7 @@ marengo config validate
 
 ### Code/Variables
 - `agent.id` - dot notation for properties
-- `cell_32x32 = (row, col)` - underscore for multi-word variables
+- `cell_6x6 = (row, col)` - underscore for multi-word variables
 - `face_recognition` - lowercase for service names
 - `CANNOT` - uppercase for specific LLM responses
 
@@ -703,8 +637,8 @@ marengo config validate
 ❌ **Wrong:** "Camera enters Active mode"
 ✅ **Right:** "Camera transitions to Active state"
 
-❌ **Wrong:** "14×9 perspective grid"
-✅ **Right:** "32×32 intra-camera grid"
+❌ **Wrong:** "32x32 grid" or "8x8 grid"
+✅ **Right:** "6x6 inter-camera grid"
 
 ❌ **Wrong:** "Alerted state"
 ✅ **Right:** "Armed state"

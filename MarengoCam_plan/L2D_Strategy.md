@@ -104,9 +104,43 @@
 
 ---
 
+## Why 6×6 Inter-Camera Grid?
+
+**Decision:** Use 6×6 grid per camera for learning spatial adjacency.
+
+**Rationale:**
+- **Overlap detection**: Grid learns which camera regions overlap (typical_time ≈ 0)
+- **Auto-merge**: Single agent in overlap zone → must be same agent, auto-merge
+- **Portal learning**: Grid learns portal connections without manual configuration
+- **Tractability**: 36 cells × 36 cells = 1,296 edges per camera pair (sparse in practice)
+- **Resolution**: Fine enough to distinguish "left vs right side of driveway"
+
+**Why 6×6 vs 8×8:**
+- Original 8×8 was 4:1 downsample from 32×32 intra-camera grid
+- New framework removes 32×32 (YOLO11 provides tracking directly)
+- 6×6 simpler to visualize, still effective for spatial correlation
+
+**What grid does:**
+1. **Overlap zones**: Auto-merge single agents (no LLM needed)
+2. **Portal zones**: Narrow time windows, filter candidates
+3. **No-connection zones**: Reject merge (cameras not adjacent)
+
+**What grid does NOT:**
+- Does NOT replace face recognition (face still strongest evidence)
+- Does NOT enforce strict timing (variance accommodated)
+- Does NOT require manual portal clicking (learns from validated merges)
+
+**Tradeoff:**
+- Requires bootstrap phase (historical footage processing)
+- But: massive reduction in LLM calls for overlapping cameras
+- Grid auto-merge >> manual review for simple cases
+
+---
+
 ## Change Log
 
 **2025-11-13**:
 - Initial strategy document created during framework reorganization
 - Added portal timing decision (doesn't help merge decisions)
 - Added multi-assignment probabilities decision (no percentages)
+- Added 6×6 grid rationale (overlap detection, auto-merge)

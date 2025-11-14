@@ -1,56 +1,23 @@
-# Level 3 - Acquisition
+# L3: Acquisition Strategy
 
-## Purpose
-How and when we acquire frames from cameras.
+**Tactical Goal:** Acquire video frames in a resource-aware manner, increasing fidelity only when necessary to capture meaningful events.
 
-## Frame Acquisition
+This document outlines the strategy for pulling frames from cameras. The corresponding technical specifications are in `L13_Acquisition.md`.
 
-### Source
-**Blue Iris JPEG API** - camera connection manager
-- Sub profile: lower resolution for detection
-- Main profile: higher resolution for detail/face recognition
-- No video/MP4 requests (JPEG snapshots only)
+## Guiding Principles
 
-### Frame Rate
-**Adaptive by camera state:**
-- Start: 2-4 FPS (prove system on limited resources)
-- Scale to: 10 FPS (face recognition benefits from temporal resolution)
-- Per-camera variation based on activity level
+- **Acquire Just-in-Time:** Frame rates should scale with the level of activity. We do not need to process every frame from every camera all the time.
+- **Preserve Pre-Roll:** Always maintain a buffer of recent frames to ensure the beginning of an event is captured.
 
-### When to Acquire Main Profile
-**Sub always acquired, main conditionally:**
-- Active cameras: both sub + main
-- Armed cameras: sub only (or optional main for neighbors)
-- Standby cameras: sub only
+## Agent-Driven Camera States
 
-## Pre-roll and Post-roll
+To manage resources effectively, each camera will operate in one of four states. The transition between states is driven by the output of the detection and tracking system.
 
-### Pre-roll Buffer
-**Ring buffer in memory** (last 7-10 seconds)
-- Always maintained, even during Standby
-- Captures lead-up when activity detected
-- Committed to disk when camera promotes to Armed/Active
+| State | Trigger | Purpose |
+|---|---|---|
+| **Standby** | No activity detected for a sustained period. | Conserve CPU/GPU resources. A minimal frame rate is maintained to detect new activity. |
+| **Armed** | A potential agent is detected with medium confidence. | Increase frame rate to confirm if the detection is a real, persistent agent. |
+| **Active** | A track has been established and is being actively followed. | Maximum frame rate to gather high-fidelity data for tracking, merging, and recognition. |
+| **Post** | An agent has just left the frame or been lost. | Maintain a high frame rate for a short period to see if the agent reappears or to capture a clean exit for merging. |
 
-### Post-roll
-**Continue acquisition after activity ends:**
-- Camera degrades from Active → Post
-- Continue saving frames through post-roll period
-- Captures agent exit/departure
-
-## Storage Strategy
-
-### Frame Persistence
-**When to save frames:**
-- Standby: pre-roll only (ring buffer, not persisted)
-- Armed/Active/Post: all frames saved to disk
-- Manifest tracks frame metadata for reconstruction
-
-### Retention
-**Frames:** Short-term (days to weeks)
-**Metadata:** Long-term (indefinite)
-- Frame files pruned after retention period
-- Metadata (tracks, merges, agents) preserved
-
-## Related Documents
-- **L2 (Strategy):** Why we acquire frames this way
-- **L11_Acquisition:** Technical specs (APIs, retry logic, HTTP transport)
+The specific frame rates and transition timings for each state are defined in `L13_Acquisition.md`.

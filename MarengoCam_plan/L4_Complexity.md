@@ -18,9 +18,10 @@ What's hard, what's tuning-dependent, and where failures occur.
 - Breaks timeline for both people
 
 **Mitigation:**
-- Mark merges as "possibly switched"
-- Don't use for portal timing learning (contaminated data)
-- Human/LLM review can correct later
+- Multi-assignment: Track A₁ possibly (B₁ or B₂), Track A₂ possibly (B₁ or B₂)
+- Face match can resolve ambiguity
+- Don't use ambiguous merges for grid learning (contaminated data)
+- Human/LLM review if needed
 
 ---
 

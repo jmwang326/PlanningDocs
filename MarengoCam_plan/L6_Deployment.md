@@ -81,10 +81,24 @@ Prove merge logic and face recognition.
 - 50%+ auto-merge rate after 1 week of operation
 - LLM adjudication works with forced-choice schema
 
-### Human-in-Loop Timeline
-- **Week 5-6:** 100% human review, build ground truth (50+ validations)
-- **Week 7:** LLM advisory mode, human validates all
-- **Week 8:** Conservative auto-accept (LLM confidence > 0.95)
+### Human-in-Loop & Adjudication Workflow
+The system is designed around a human-centric review process. The user is always in control of the final decision for ambiguous merges. Automation is an opt-in feature, not a default.
+
+**Default Workflow (Human-in-Control):**
+1.  **Human Review Queue:** All merge candidates that are not resolved by high-confidence evidence (e.g., a definitive face match) are placed in a manual review queue.
+2.  **On-Demand LLM Consultation:** From the review UI, the operator has options for how to use the LLM as a consultant:
+    *   The UI can display a pre-computed LLM opinion, which the operator can then accept or override.
+    *   For any given case, the operator can click a button to "Ask LLM" to get a fresh analysis on demand.
+3.  **The Human is the Final Authority:** The operator's decision is always considered ground truth. It is used to update the agent timeline and provide the high-quality data needed to train the system's other models (face library, `6x6` grid timings).
+
+**Optional Automated Workflow (User Opt-In):**
+- **Configuration:** The system will provide a configuration setting (e.g., `review_mode: manual | automatic`) to allow the user to opt-out of the manual review loop for certain cases. This is the mechanism for the user to "be out of the loop."
+- **Auto-Acceptance Threshold:** When in `automatic` mode, the system can be configured to automatically accept LLM decisions that meet a user-defined confidence threshold (e.g., `confidence > 0.90`).
+- **Phased Trust Building:** The recommended deployment starts in `manual` mode to build a ground-truth dataset and gain confidence in the LLM's accuracy. The user can later choose to enable `automatic` mode for high-confidence cases to reduce their workload.
+
+**Primary Automation Path (Face Recognition):**
+- The most effective path to automation is building a robust face library for known individuals.
+- Once a person is reliably identified via face recognition, their merges can be automatically approved without needing LLM or human review, representing the highest level of automation.
 
 ### Tools
 - Multi-camera viewer (2×2 grid, synchronized playback)

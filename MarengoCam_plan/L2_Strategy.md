@@ -13,7 +13,11 @@ Non-technical description of **what** we're doing and **why** this approach solv
 ### Track Within Cameras
 **What:** Follow objects frame-to-frame within single camera
 **Why:** YOLO11 provides tracking, reduces per-frame detections to persistent tracks
-**Approach:** Tracker links detections across frames, creates track segments
+**Approach:**
+- Process video in 12s chunks with 2s overlap (real-time constraints)
+- YOLO11 links detections across frames within each chunk
+- Overlap zone allows linking YOLO local IDs across chunk boundaries
+- Build temporal continuity without relying on persistent YOLO IDs
 
 ### Merge Across Cameras
 **What:** Link track segments that belong to same agent
@@ -22,13 +26,14 @@ Non-technical description of **what** we're doing and **why** this approach solv
 
 ### Evidence Hierarchy
 **What:** Use strongest evidence first, fallback to weaker evidence
-**Why:** Face match is definitive, time/space is suggestive, LLM is expensive
+**Why:** Face match is definitive, grid overlap eliminates ambiguity, LLM is expensive
 
 **Hierarchy:**
 1. **Face recognition** (known people auto-merge)
-2. **Time/space gating** (impossible transitions rejected)
-3. **LLM adjudication** (ambiguous cases)
-4. **Human validation** (final fallback)
+2. **Grid overlap + single candidate** (camera overlap, must be same agent)
+3. **Grid overlap + multiple candidates** (constrained multi-assignment)
+4. **Grid portal + evidence** (time/space gating, then LLM/human)
+5. **No grid data** (reject or manual portal fallback)
 
 ### Accept Uncertainty
 **What:** Some tracks can't be assigned definitively
@@ -40,12 +45,24 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - System operates with partial timeline
 - Don't force wrong merge to avoid uncertainty
 
+### Grid-Based Spatial Learning
+**What:** 6×6 inter-camera grid learns which camera regions connect
+**Why:** Distinguishes overlap (same view) from portals (movement between cameras)
+
+**Approach:**
+- Bootstrap from historical validated merges
+- Grid learns typical transition times between cell pairs
+- Overlap zones (typical_time ≈ 0): auto-merge same agent
+- Portal zones (typical_time 1-15s): normal evidence evaluation
+- No connection (no data): reject or manual portal config
+
 ### Learn from Corrections
 **What:** Human/LLM validations improve future decisions
 **Why:** System learns what "same person" looks like over time
 
 **Approach:**
 - Face library builds from validated merges
+- Grid learns transition patterns from validated cross-camera merges
 - Face recognition improves as library grows
 
 ## Strategy for Noise Filtering
@@ -152,6 +169,15 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - Can't walk camera-to-camera while in car (vehicle does the moving)
 - Person track effectively "paused" until vehicle parks and person exits
 - Vehicle track becomes proxy for person movement
+
+### Operational Modes: Offline Learning, Online Learning, and Autonomous
+The system's lifecycle is divided into three distinct modes, providing a clear path from initial setup to mature, autonomous operation.
+
+*   **Offline Learning Mode:** This is the initial bootstrapping phase, executed by a set of offline tools and scripts. The goal is to process a large corpus of historical video data to build the first version of the system's learned models (e.g., the face library, camera overlap data) before the system goes live.
+
+*   **Online Learning Mode:** The initial live production mode. The system processes real-time data but operates conservatively. It queues uncertain merge decisions for human review, using the feedback to continuously improve its models. This is the primary "human-in-the-loop" phase.
+
+*   **Autonomous Mode:** The mature production mode. After a period of successful online learning, the system is trusted to operate with a more aggressive auto-merge strategy, requiring minimal human supervision for routine events.
 
 ## Related Documents
 - **L1 (Mission):** Why we're solving this problem (core values, goals)

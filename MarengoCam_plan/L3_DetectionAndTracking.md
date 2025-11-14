@@ -22,17 +22,36 @@ How we detect objects and track them within cameras.
 
 ## Tracking (Intra-Camera)
 
+### Chunked Processing
+**12-second chunks with 2-second overlap:**
+- Process video in 12s segments (T=0-12s, T=10-22s, T=20-32s...)
+- First 2s of each chunk overlaps with last 2s of previous chunk
+- Overlap allows linking YOLO local IDs across chunks
+
+**Why chunked:**
+- Real-time processing: 12s chunks keep up with incoming video
+- Multiple streams: pipeline chunks across 10+ cameras
+- YOLO ID discontinuity: YOLO track IDs reset each inference session
+- Overlap solves: "Local ID 3 in chunk N" = "Local ID 7 in chunk N+1"
+
 ### Track Segments
-**YOLO11 provides tracking** - links detections across frames
-- Track ID assigned per camera
+**YOLO11 provides tracking within chunks:**
+- Track ID assigned per camera per chunk (local ID)
 - Bounding box + confidence per frame
-- Track segment = continuous observation on one camera
+- Track segment = continuous observation within one chunk
+
+**Chunk linking:**
+- Agent in overlap zone (T=10-12s) → match across chunk boundary
+- Single agent in overlap → deterministic match (position continuity)
+- Multiple agents → appearance similarity + spatial continuity
+- Build linked list: chunk N track → chunk N+1 track → ...
 
 ### Track Persistence
 **When does track start/end:**
 - Start: first detection above confidence threshold
-- Continue: YOLO11 maintains ID across frames
-- End: object leaves frame or tracking lost
+- Continue: YOLO11 maintains ID across frames within chunk
+- End: object leaves frame, tracking lost, or chunk boundary
+- Cross-chunk: linked via overlap zone matching
 
 ### Track Quality
 **Filters for "real" activity:**
