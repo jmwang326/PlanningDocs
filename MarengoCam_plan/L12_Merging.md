@@ -30,14 +30,14 @@ def find_merge_candidates():
 ```python
 def evaluate_merge_candidate(track1, track2):
     """
-    Evidence hierarchy: face → grid overlap → grid transition → LLM → reject
+    Evidence hierarchy: face → grid overlap → grid transition + alibi → LLM → reject
     """
     # 1. Face recognition (definitive)
     if face_match(track1, track2) > 0.75:
         return AUTO_MERGE, "face_match"
 
     # 2. GRID OVERLAP (fastest auto-merge)
-    # Both tracks in same cell (or adjacent) with travel_time < 1.0s?
+    # Both tracks in same cell (or adjacent) with travel_time < 0.4s?
     # → Same camera can see both objects = same agent
 
     grid_stats = get_grid_transition_stats(
@@ -45,7 +45,9 @@ def evaluate_merge_candidate(track1, track2):
         track2.camera, track2.entry_cell    # Where person entered camera 2
     )
 
-    if grid_stats and grid_stats.travel_time < 1.0:  # OVERLAP ZONE
+    OVERLAP_THRESHOLD = 0.4  # seconds (tighter threshold for true overlaps)
+
+    if grid_stats and grid_stats.travel_time < OVERLAP_THRESHOLD:
         # No time gap → cameras see same physical space
         # But: multiple people might be in that space
 
@@ -61,17 +63,43 @@ def evaluate_merge_candidate(track1, track2):
             # Multiple people in overlap zone → ambiguous
             return MULTI_ASSIGN_OVERLAP, "grid_overlap_ambiguous"
 
-    # 3. GRID TRANSITION (plausible but needs other evidence)
+    # 3. GRID TRANSITION (learned path: plausible but needs alibi check)
     # Learned travel time: 5 seconds typical. Observed: 4.8 seconds.
-    # → Plausible path, continue with secondary evidence
+    # → Plausible path *from track1's camera*, but could entry agent come from elsewhere?
 
-    if grid_stats and grid_stats.travel_time > 1.0:
+    if grid_stats and grid_stats.travel_time >= OVERLAP_THRESHOLD:
         travel_time_observed = track2.start_time - track1.end_time
         margin = max(2.0, grid_stats.variance * 2)  # Conservative margin
 
         if abs(travel_time_observed - grid_stats.travel_time) <= margin:
-            # Time fits learned transition
-            return REVIEW_LLM, "grid_transition_plausible"
+            # Time fits learned transition from track1 → track2
+
+            # CRITICAL: Alibi check - could track2.entry have come from another camera?
+            alternative_sources = find_alternative_sources_for_entry(
+                track2.camera,
+                track2.entry_cell,
+                track2.start_time,
+                master_grid=grid,
+                exclude_camera=track1.camera
+            )
+
+            if not alternative_sources:
+                # No plausible alternative sources
+                # track1's camera is the only source that fits the grid + timing
+
+                # Single agent confirmation at both ends
+                agents_at_exit = count_agents(track1.camera, track1.exit_cell, track1.end_time)
+                agents_at_entry = count_agents(track2.camera, track2.entry_cell, track2.start_time)
+
+                if agents_at_exit == 1 and agents_at_entry == 1:
+                    # Process of elimination: only track1 could be track2
+                    return AUTO_MERGE, "grid_transition_single_source"
+                else:
+                    # Multiple agents → need additional evidence
+                    return REVIEW_LLM, "grid_transition_multi_agent"
+            else:
+                # Multiple plausible sources (ambiguous)
+                return REVIEW_LLM, "grid_transition_ambiguous_source"
         else:
             # Time doesn't match learned paths
             return REJECT, "grid_transition_timing_mismatch"
@@ -87,13 +115,66 @@ def evaluate_merge_candidate(track1, track2):
 
     # 5. Default: insufficient evidence
     return REJECT, "no_merge_evidence"
+
+def find_alternative_sources_for_entry(dest_camera, dest_entry_cell, entry_time, master_grid, exclude_camera=None):
+    """
+    FAST ALIBI CHECK: Can the entry agent plausibly come from another camera?
+
+    Uses fast lookup matrix for O(N) check instead of searching all 6×6×6×6 grids.
+
+    Returns: List of source camera IDs that could plausibly be the source
+
+    Algorithm:
+    1. For each camera except exclude_camera:
+        - Check fastest_inter_camera_time[(source_camera, dest_camera)]
+        - If minimum time is unlearned, skip (no evidence)
+        - If minimum time fits timing window, add to alternatives
+    2. Return list of plausible source cameras
+
+    A "plausible time window" means:
+    - time_since_entry = entry_time
+    - Could exit have happened from source_camera such that:
+        - fastest_time <= (entry_time - exit_time) <= fastest_time + margin
+    - Margin is conservative (e.g., 2-4 seconds) to account for variance
+    """
+    alternatives = []
+    MARGIN = 3.0  # seconds - conservative allowance for variance
+
+    for source_camera in get_all_cameras():
+        if exclude_camera is not None and source_camera == exclude_camera:
+            continue
+
+        # Quick check: is there ANY learned path from this camera to dest?
+        key = (source_camera, dest_camera)
+        min_time = master_grid.fastest_inter_camera_time.get(key, None)
+
+        if min_time is None:
+            # No learned path - skip this source
+            continue
+
+        # Would timing fit?
+        # Find tracks from source_camera that exited around entry_time - min_time
+        expected_exit_time = entry_time - min_time
+        exit_time_window = (expected_exit_time - MARGIN, expected_exit_time + MARGIN)
+
+        candidate_tracks = get_tracks_exiting_camera_in_timeframe(
+            source_camera,
+            exit_time_window
+        )
+
+        if candidate_tracks:
+            # At least one track could plausibly be the source
+            alternatives.append(source_camera)
+
+    return alternatives
 ```
 
 **Key decision points:**
-- **Grid < 1.0s + single agent in each zone** = instant auto-merge (temporal and spatial determinism)
-- **Grid learned + time fits** = plausible, needs LLM/face for confidence
+- **Grid < 0.4s + single agent in each zone** = instant auto-merge (temporal and spatial determinism)
+- **Grid ≥ 0.4s + time fits + NO alternatives + single agents** = auto-merge (process of elimination)
+- **Grid ≥ 0.4s + time fits + multiple alternatives** = REVIEW_LLM (ambiguous source)
 - **Grid not learned** = need manual portal or high face confidence
-- **Multiple agents in overlap** = mark as ambiguous, let later evidence resolve
+- **Multiple agents in zone** = mark as ambiguous, needs additional evidence
 
 ## Face Recognition
 
@@ -539,20 +620,29 @@ def assemble_comparison_panel(track_a: LocalTrack, track_b: LocalTrack) -> bytes
     return panel
 ```
 
-## Inter-Camera Grid (6×6)
+## Inter-Camera Grid (6×6 + Fast Lookup)
 
 ### Data Structure
 ```python
 class InterCameraGrid:
     """
-    6×6 grid per camera for learning spatial adjacency
-    """
-    camera_id: int
-    grid_size: Tuple[int, int] = (6, 6)  # 36 cells
+    6×6 grid per camera pair for learning spatial adjacency.
 
-    # Sparse storage: only cell pairs with observed transitions
-    transitions: Dict[int, Dict[int, Dict[int, TransitionStats]]]
-    # transitions[cell_id][other_camera_id][other_cell_id] = TransitionStats
+    Two-tier storage:
+    1. Detailed 6×6×6×6 grids: full cell-to-cell transition statistics
+    2. Fast lookup matrix: minimum time ever observed per camera-pair
+    """
+    # DETAILED: Full 6×6×6×6 grid per camera pair
+    # Key: (source_camera_id, dest_camera_id)
+    # Value: 6×6 source cells → 6×6 dest cells → TransitionStats
+    transitions: Dict[Tuple[int, int], Dict[int, Dict[int, TransitionStats]]]
+    # transitions[(src_cam, dst_cam)][src_cell][dst_cell] = TransitionStats
+
+    # FAST LOOKUP: Minimum time from any source to destination camera
+    # Key: (source_camera_id, dest_camera_id)
+    # Value: minimum observed travel time in seconds (or None if unlearned)
+    fastest_inter_camera_time: Dict[Tuple[int, int], Optional[float]]
+    # fastest_inter_camera_time[(src_cam, dst_cam)] = min_travel_time
 
 class TransitionStats:
     """
@@ -563,13 +653,17 @@ class TransitionStats:
     sample_count: int    # Number of validated transitions
     last_updated: float  # Timestamp
 
+    OVERLAP_THRESHOLD = 0.4  # seconds (cameras see same physical space)
+    PORTAL_MIN_TIME = 0.4    # seconds (anything >= overlap threshold)
+    PORTAL_MAX_TIME = 15.0   # seconds (reasonable portal crossing time)
+
     def is_overlap(self) -> bool:
-        """Overlap if typical time < 1s (simultaneous detection)"""
-        return self.typical_time < 1.0
+        """Overlap if typical time < 0.4s (cameras see same physical space)"""
+        return self.typical_time < self.OVERLAP_THRESHOLD
 
     def is_portal(self) -> bool:
-        """Portal if 1-15s transition time"""
-        return 1.0 <= self.typical_time <= 15.0
+        """Portal if 0.4-15s transition time"""
+        return self.PORTAL_MIN_TIME <= self.typical_time <= self.PORTAL_MAX_TIME
 
     def update(self, time_delta: float):
         """Update running statistics with new observation"""
@@ -591,32 +685,45 @@ def position_to_grid_cell(position: Tuple[float, float], grid_size: int = 6) -> 
 
 ### Bootstrap Learning
 ```python
-def learn_from_validated_merge(track_a, track_b):
+def learn_from_validated_merge(track_a, track_b, master_grid):
     """
     User/LLM validated: Track A and Track B are same agent
-    Update grid transition statistics
+    Update both detailed grid and fast lookup matrix.
     """
     cell_a = position_to_grid_cell(track_a.end_position)
     cell_b = position_to_grid_cell(track_b.start_position)
 
     time_delta = track_b.start_time - track_a.end_time
 
+    # ===== UPDATE DETAILED 6×6×6×6 GRID =====
     # Get or create transition stats
-    if cell_a not in grid[track_a.camera].transitions:
-        grid[track_a.camera].transitions[cell_a] = {}
-    if track_b.camera not in grid[track_a.camera].transitions[cell_a]:
-        grid[track_a.camera].transitions[cell_a][track_b.camera] = {}
-    if cell_b not in grid[track_a.camera].transitions[cell_a][track_b.camera]:
-        grid[track_a.camera].transitions[cell_a][track_b.camera][cell_b] = TransitionStats()
+    key = (track_a.camera, track_b.camera)
+    if key not in master_grid.transitions:
+        master_grid.transitions[key] = {}
+    if cell_a not in master_grid.transitions[key]:
+        master_grid.transitions[key][cell_a] = {}
+    if cell_b not in master_grid.transitions[key][cell_a]:
+        master_grid.transitions[key][cell_a][cell_b] = TransitionStats()
 
     # Update statistics
-    stats = grid[track_a.camera].transitions[cell_a][track_b.camera][cell_b]
+    stats = master_grid.transitions[key][cell_a][cell_b]
     stats.update(time_delta)
+
+    # ===== UPDATE FAST LOOKUP MATRIX =====
+    # Keep track of minimum time ever observed for this camera pair
+    if key not in master_grid.fastest_inter_camera_time:
+        master_grid.fastest_inter_camera_time[key] = time_delta
+    else:
+        # Update with minimum observed time
+        current_min = master_grid.fastest_inter_camera_time[key]
+        if current_min is None or time_delta < current_min:
+            master_grid.fastest_inter_camera_time[key] = time_delta
 
     # Grid now knows:
     # - If time_delta ≈ 0: cameras overlap at these cells
-    # - If time_delta 1-15s: portal connection
+    # - If time_delta 0.4-15s: portal connection
     # - If time_delta > 15s: distant cameras, rare transition
+    # - fastest_inter_camera_time[(A→B)] = minimum time ever observed
 ```
 
 ## Multi-Assignment

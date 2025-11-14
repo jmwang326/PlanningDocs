@@ -56,10 +56,28 @@ Non-technical description of **what** we're doing and **why** this approach solv
 5. **Future merging:** See similar exit/entry cells? Recognize it as plausible transition
 
 **Overlap zones (fastest merging):**
-- If travel_time < 1.0 second: cameras can see overlapping areas
+- If travel_time < 0.4 seconds: cameras can see overlapping areas
 - Grid cell marked as overlap (time ≈ 0)
 - Future tracks in same overlap cells with time ≈ 0 → **instant auto-merge** (must be same agent)
 - Key insight: **no time gap = same space = same agent (if only one agent visible)**
+
+**Adjacent camera transitions (with alibi checking):**
+- If travel_time ≥ 0.4 seconds: agents move between non-overlapping cameras
+- Before auto-merging, verify: **could the entry agent have come from somewhere else?**
+- Check all other cameras: "Could any other recent track have arrived at this entry point at this time?"
+- Only if answer is NO (alibi check passes): agent at exit and entry cells are single-confirmed → **auto-merge**
+- If answer is YES (alternatives exist): mark as ambiguous, route to LLM for adjudication
+- This is "Process of Elimination": agent at destination must have come from the only plausible source
+
+**Why Process of Elimination matters:**
+- Multiple people on property at same time
+- Same grid cells used by different agents in sequence
+- Example: Person A exits front door at T=2s, Person B enters back camera at T=5s
+  - Time fits learned grid (typical=4s, variance=1s)
+  - But did Person B come from Person A's path, or from another camera?
+  - Alibi check: "Did anyone else exit any camera in way that could reach that entry cell in that time?"
+  - If NO: must be Person A (deterministic merge)
+  - If YES: ambiguous, needs face/LLM confirmation
 
 **Edge noise handling:**
 - Grid learns only from **high-quality, validated merges** (single agent, high confidence)
