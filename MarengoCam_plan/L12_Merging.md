@@ -932,6 +932,171 @@ def rule_out_vehicle_occupant(agent_id, timestamp):
                     vehicle.occupants[0].validated = True
 ```
 
+### Portal-Based Merging (Entry and Exit)
+
+**Background:** Portals are configured entry/exit points where an agent can become occluded (building entrance, garage, dense vegetation). Normal grid-based timing doesn't apply because the agent's whereabouts are unknown while in the portal.
+
+**Key insight:** Portal crossings are **identity-preserving boundaries**. If Track A disappears into a portal and Track B emerges from the same portal, they represent the same agent (subject to constraints).
+
+#### Portal Entry: Track Disappears Into Portal
+
+```python
+def evaluate_portal_entry(track: Track, portal: Portal) -> PortalEntryResult:
+    """
+    Track ends at a portal location. Update agent state to reflect entry into occluded space.
+    """
+    agent = get_agent(track.agent_id)
+
+    # Spatial check: Is track exit near portal location?
+    dist = distance(track.exit_cell, portal.location)
+    if dist > PORTAL_ENTRY_THRESHOLD:
+        return REJECTED, "too_far_from_portal"
+
+    # Update agent state
+    if agent.agent_type == "person":
+        agent.state = f"in_structure({portal.structure_id})"
+        agent.structure_entry_time = track.end_time
+        # Timeline: "Person entered building at East Door"
+
+    elif agent.agent_type == "vehicle":
+        agent.state = f"in_structure({portal.structure_id})"
+        agent.structure_entry_time = track.end_time
+        # Timeline: "Vehicle entered garage"
+
+    return PORTAL_ENTRY_ACCEPTED, portal.structure_id
+```
+
+#### Portal Exit: Track Emerges From Portal
+
+```python
+def evaluate_portal_exit_merge(
+    new_track: Track,
+    portal: Portal,
+    portal_entry_agents: Dict[str, float]  # {agent_id: entry_time}
+) -> PortalExitResult:
+    """
+    New track starts near portal exit point. Could it be an agent that entered the portal earlier?
+
+    Plausible candidates: Any agent with state=in_structure(portal.structure_id)
+    """
+    # Spatial check: Is new track entry near portal location?
+    dist = distance(new_track.entry_cell, portal.location)
+    if dist > PORTAL_EXIT_THRESHOLD:
+        return REJECTED, "too_far_from_portal"
+
+    # Find candidates: agents currently in this structure
+    candidates = [
+        agent_id
+        for agent_id, entry_time in portal_entry_agents.items()
+        if get_agent(agent_id).state == f"in_structure({portal.structure_id})"
+    ]
+
+    if len(candidates) == 0:
+        # No one known to be in structure - new agent
+        return NEW_AGENT, "structure_was_empty"
+
+    if len(candidates) == 1:
+        # Only one possibility - deterministic
+        candidate_id = candidates[0]
+        candidate_agent = get_agent(candidate_id)
+
+        # Time window check: Is dwell time plausible?
+        dwell_time = new_track.start_time - candidate_agent.structure_entry_time
+        if dwell_time < PORTAL_MIN_DWELL or dwell_time > PORTAL_MAX_DWELL:
+            # Time doesn't fit, but be lenient (user might have walked around inside)
+            return AUTO_MERGE, f"portal_exit_single_candidate_{candidate_id}"
+
+        return AUTO_MERGE, f"portal_exit_deterministic_{candidate_id}"
+
+    # Multiple candidates: use secondary evidence
+    return evaluate_portal_exit_ambiguous(new_track, candidates, portal)
+
+def evaluate_portal_exit_ambiguous(
+    new_track: Track,
+    candidates: List[str],
+    portal: Portal
+) -> PortalExitResult:
+    """
+    Multiple people in same structure. Which one is exiting?
+    Apply process of elimination.
+    """
+    candidate_scores = {}
+
+    for candidate_id in candidates:
+        candidate = get_agent(candidate_id)
+        score = 0.0
+
+        # EVIDENCE 1: Face match
+        face_sim = compute_face_similarity(new_track.face, candidate.face_library)
+        if face_sim > 0.7:
+            score += 40
+
+        # EVIDENCE 2: Re-ID match
+        reid_sim = compute_reid_similarity(new_track.reid, candidate.reid_embedding)
+        if reid_sim > 0.7:
+            score += 30
+
+        # EVIDENCE 3: Dwell time plausibility
+        dwell_time = new_track.start_time - candidate.structure_entry_time
+        if PORTAL_MIN_DWELL <= dwell_time <= PORTAL_MAX_DWELL:
+            score += 20
+
+        # EVIDENCE 4: Interior detections during dwell
+        if candidate_id in portal.interior_detections:
+            score += 15
+
+        # EVIDENCE 5: Clothing consistency
+        if clothing_similarity(new_track, candidate) > 0.8:
+            score += 10
+
+        candidate_scores[candidate_id] = score
+
+    # Sort by score
+    best_candidate, best_score = max(candidate_scores.items(), key=lambda x: x[1])
+
+    if best_score < 20:
+        # Even best candidate has low confidence
+        return AMBIGUOUS, f"portal_exit_low_confidence_{candidates}"
+
+    # Check if second-best is close to best
+    scores_sorted = sorted(candidate_scores.values(), reverse=True)
+    if len(scores_sorted) > 1 and scores_sorted[0] - scores_sorted[1] < 10:
+        # Close call between candidates
+        return AMBIGUOUS, f"portal_exit_ambiguous_{candidates}"
+
+    # Best candidate significantly better than others
+    return AUTO_MERGE, f"portal_exit_best_match_{best_candidate}"
+```
+
+#### Portal Re-Entry: Agent Exits Portal and Re-Enters
+
+**Scenario:** Person enters building at time T1, exits at T2, then re-enters at T3.
+
+```python
+def handle_multiple_portal_crossings(agent: Agent, portal: Portal):
+    """
+    Agent crosses same portal multiple times.
+    Track each crossing separately in agent.portal_history.
+    """
+    # Portal history tracks each crossing
+    # Entry: timestamp, location
+    # Exit: timestamp, location
+    #
+    # Example:
+    # portal_history = [
+    #   {type: "entry", time: 100, location: portal.id},
+    #   {type: "exit", time: 150, location: portal.id},
+    #   {type: "entry", time: 160, location: portal.id},
+    #   {type: "exit", time: 200, location: portal.id},
+    # ]
+    #
+    # This maintains full picture for timeline reconstruction
+
+    # Agent can re-enter same portal
+    # Each time, determine which exit corresponds to which entry
+    # Use time proximity + location matching
+```
+
 ### Person-in-Vehicle Merge Exemption
 ```python
 def find_merge_candidates(person_agent):
