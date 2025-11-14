@@ -121,29 +121,47 @@ This file captures topics that need attention to prevent orphaning important iss
 
 ---
 
-### File Structure Cleanup (2025-11-14)
-**Issue:** Root directory has many files; need to organize D-files, old L-files, and extract L4 concepts.
+### File Structure Cleanup (COMPLETED 2025-11-14)
+**Issue:** Root directory had many files; needed to organize D-files, old L-files, and extract L4 concepts.
 
-**D-files (Discourse/Decision rationale):**
-- L1D_Mission.md - Mission rationale ("Why agent-centric?", "Why observable evidence?")
-- L2D_Strategy.md - Strategy rationale ("Why evidence hierarchy?", "Why accept uncertainty?")
-- L3D_Database.md - Decision: No L3_Database needed (passive repository)
-- L3D_InferenceManager.md - (need to check)
-- L3D_Merging.md - (need to check)
+**Completed actions:**
+- ✅ Moved all D-files to `decisions/` subdirectory (6 files)
+- ✅ Moved L4_Complexity.md to `decisions/` (risks/tradeoffs)
+- ✅ Archived L2_Strategy_Principles.md, L15_Bootstrap.md
+- ✅ Created 4 L4 concept files extracted from L3
+- ✅ Archived all L12 files (8 files) - wrong abstraction level
 
-**Plan:** Move all D-files to `decisions/` subdirectory (already exists)
+**L12 files archived:**
+- L12_Architecture.md, L12_ConcurrentTracking.md, L12_CrossCameraCorrelation.md
+- L12_Merging.md, L12_ProcessOfElimination.md, L12_TrackAgentRelationship.md
+- L12_VehicleOccupancy.md, L12_YOLOTrackingLeverage.md
 
-**Old L-files to archive:**
-- L2_Strategy_Principles.md - Superseded by L2_Strategy.md
-- L13 files superseded by L3 restructure (move to _archive)
-- L15_Bootstrap.md - Rename to L5 (follows convention)
+**Why archived:** Too detailed (pseudocode belongs in L14), or obsolete architecture
 
-**L4 extraction candidates (from L3):**
-- Grid learning details (currently in L3_IdentityResolution)
-- Alibi check logic (currently in L3_IdentityResolution)
-- Portal transition handling (currently in L3_Configuration + L3_IdentityResolution)
-- Vehicle occupancy (currently in L12_VehicleOccupancy, should be L4)
+**Status:** Cleanup complete
 
-**Status:** Pending user approval
+---
+
+### L12 Redefinition (2025-11-14)
+**Purpose:** L12 should be functional decomposition layer, not algorithm pseudocode.
+
+**L12 = Interface contracts:**
+- Function signatures (inputs/outputs)
+- Call graphs (which functions call which)
+- Data structures passed between functions
+- Module organization
+- NOT implementation pseudocode (that's L14)
+
+**Example:**
+```python
+def resolve_identity(track: LocalTrack) -> IdentityResolution:
+    """Calls: check_face_match(), check_grid_overlap(), perform_alibi_check()"""
+```
+
+**Current L12 files:** All archived (wrong abstraction level)
+
+**Plan:** Generate new L12 files later when specifying function interfaces
+
+**Status:** Clarified, ready for future implementation
 
 ---
