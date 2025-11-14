@@ -472,7 +472,8 @@ def log_occupancy_event(
 
 ## 7. Related Documents
 
-- **L12_ProcessOfElimination:** Constraint-based disambiguation pattern
+- **L12_ProcessOfElimination:** System-wide constraint-based disambiguation pattern (applies to vehicle exit)
+- **L12_Merging.md:** Portal-based merging logic and alternative source detection
 - **L2_Strategy.md:** Strategy for vehicle association (sections on observable evidence, agent states)
 - **L13_TrackStateManager:** Track data structures and agent promotion
 - **L13_TimelineReconstruction:** Converting occupancy events to narrative timeline

@@ -237,3 +237,5 @@ The system's lifecycle is defined by an initial **Bootstrapping** phase (see `L5
 - **L4 (Complexity):** Where this strategy gets complicated
 - **L10 (Nomenclature):** Terminology definitions
 - **L12_ProcessOfElimination:** System-wide pattern for resolving identity uncertainty through constraints
+- **L12_VehicleOccupancy:** Technical specification for tracking people in/out of vehicles
+- **L12_Merging:** Technical implementation of cross-camera merge logic (grid-based, portal-based)

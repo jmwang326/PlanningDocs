@@ -422,8 +422,10 @@ Process of elimination is **NOT** the only decision mechanism. It works together
 
 ## 7. Related Documents
 
-- **L2_Strategy.md**: High-level strategy for using constraints
-- **L12_Merging.md**: Implementation of merge evaluation with alibi checking
+- **L2_Strategy.md**: High-level strategy for using constraints and process of elimination
+- **L12_Merging.md**: Implementation of merge evaluation with alibi checking and portal-based merging
+- **L12_VehicleOccupancy.md**: Application of process of elimination to vehicle entry/exit disambiguation
 - **L3_EvidenceEngine.md**: Fact-gathering for merge candidates
 - **L3_TrackMerging.md**: Decision logic for merge evaluation
-- **L13_TrackStateManager.md**: Agent promotion and multi-assignment handling
+- **L3_ProcessOfElimination.md**: Non-technical overview (if created)
+- **L13_TrackStateManager.md**: Agent promotion and multi-assignment handling with constraint application

@@ -297,8 +297,9 @@ Timeline result:
 ```
 
 ## Related Documents
-- **L12_ProcessOfElimination:** System-wide pattern for constraint-based disambiguation
+- **L12_ProcessOfElimination:** System-wide pattern for constraint-based disambiguation (core reference)
 - **L12_Merging:** Merge evaluation and cross-camera candidate identification
+- **L12_VehicleOccupancy:** Vehicle entry/exit handling and occupancy state tracking
 - **L3_DetectionAndTracking:** Candidate track state machine (non-technical)
 - **L3_TrackStateManager:** Non-technical overview of state management
 - **L13_Detection:** Chunk processing and LocalTrack creation (uses promoted candidates)
