@@ -223,7 +223,7 @@ if min_travel_time == 0:
 **Behavior:**
 - Acquisition: Varies (may skip frames)
 - Inference: Scaled back for non-Active cameras
-- Active cameras: Maintain fidelity (always 100% inference)
+- Active cameras: Maintain fidelity (full allocated inference budget, no further reduction)
 - Purpose: Protect system during high load
 
 **Triggers:**
@@ -490,16 +490,16 @@ if min_travel_time == 0:
 
 ---
 
-### Pre-roll / Post-roll
-**Definitions:**
-- **Pre-roll:** Ring buffer before Armed (7 seconds)
-- **Post-roll:** Persistence after Active ends (10-15 seconds, TBD)
+### Post-roll
+**Definition:** Continued frame capture after Active state ends (Post camera state duration)
 
-**Purpose:** Capture context before/after event for playback.
+**Purpose:** Capture complete exit/departure for smooth playback and merge evidence
 
-**Always write as:** "pre-roll" / "post-roll" (hyphenated, lowercase)
+**Always write as:** "post-roll" (hyphenated, lowercase)
 
-**NOT:** "preroll", "pre roll", "post_roll"
+**NOT:** "postroll", "post roll", "post_roll"
+
+**Note:** System has no dedicated pre-roll buffer. The 25s processing buffer provides historical frames as artifact of chunked processing, enabling smooth playback from event start.
 
 ---
 

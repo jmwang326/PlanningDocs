@@ -7,8 +7,8 @@ This document outlines the high-level technical components (core processes) of t
 
 ### 1. Frame Acquisition (Blue Iris Integration)
 - **Function:** Fetches JPEG snapshots from Blue Iris HTTP endpoints at configured frame rate (10 FPS production, 2 FPS DEV_SLOW).
-- **Responsibilities:** Polls Blue Iris `/image/{short}?q=60` endpoint for sub and main profiles, handles connection errors, maintains frame buffers for pre-roll/post-roll.
-- **Corresponds to L3 Tactic:** `L3_Acquisition.md`
+- **Responsibilities:** Polls Blue Iris `/image/{short}?q=60` endpoint for sub and main profiles, handles connection errors, maintains 25s rolling frame buffer for chunked processing and post-roll.
+- **Corresponds to L3 Tactic:** `L3_VideoIngestor.md`
 
 ### 2. Detection & Intra-Camera Tracking
 - **Function:** Processes video chunks using the object detection and tracking model (YOLOv11).

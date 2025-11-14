@@ -14,9 +14,9 @@
 - **[Level0.md](Level0.md)** - Meta-instructions for agents (evolves continuously)
 - **[L1_Mission.md](L1_Mission.md)** - Mission and philosophy
 - **[L2_Strategy.md](L2_Strategy.md)** - Strategy (what and why)
-- **[L3_Acquisition.md](L3_Acquisition.md)** - Acquisition tactics
-- **[L3_Detection.md](L3_Detection.md)** - Detection and tracking tactics
-- **[L3_Merging.md](L3_Merging.md)** - Cross-camera merging tactics
+- **[L3_VideoIngestor.md](L3_VideoIngestor.md)** - Frame acquisition tactics
+- **[L3_DetectionAndTracking.md](L3_DetectionAndTracking.md)** - Detection and tracking tactics
+- **[L3_TrackMerging.md](L3_TrackMerging.md)** - Cross-camera merging tactics
 - **[L4_Complexity.md](L4_Complexity.md)** - Complexity and risks
 - **[L6_Deployment.md](L6_Deployment.md)** - Deployment plan
 

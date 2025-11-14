@@ -21,39 +21,40 @@ http://{bi_server}/image/{camera_short_name}?q={quality}&s={size}
 - Timeout: 5 seconds per request
 - Jittered scheduling (prevent thundering herd)
 
-## Frame Rate Control
+## Frame Acquisition Rate
 
-### Adaptive Scheduling
-**Per camera, based on state:**
+### Constant Polling
+**All cameras polled continuously:**
 ```python
-target_fps = {
-    'standby': 0.2,   # ~1 frame per 5s
-    'armed': 3.0,
-    'active': 10.0,
-    'post': 5.0
-}
+acquisition_fps = 10.0  # Production (constant)
+acquisition_fps_dev = 2.0  # DEV_SLOW mode
 ```
+
+**Why constant:**
+- Ensures smooth video playback (10 FPS baseline)
+- Acquisition is cheap (HTTP JPEG fetch)
+- Camera states control **inference rate**, not acquisition rate
 
 ### Frame Timestamps
 **Millisecond precision:**
 - Capture timestamp from Blue Iris (if available)
 - Or system timestamp at acquisition
-- Supports arbitrary FPS (not locked to integer rates)
+- Stored with camera_id + frame_number
 
-## Ring Buffer
+## Processing Buffer
 
 ### Implementation
-**Circular buffer in memory:**
-- Size: `fps × pre_roll_seconds` (e.g., 10 FPS × 7s = 70 frames)
-- JPEG bytes stored (no decode)
-- Timestamps + camera_id + frame_number
+**25-second rolling buffer:**
+- Size: `10 FPS × 25s = 250 frames` per camera
+- JPEG bytes stored (no decode until needed)
+- Enables chunked processing: 12s chunks with 2s overlap, extracted every 10s
 
 ### Commit to Disk
-**Triggered by state transition:**
-- Standby → Armed: flush ring buffer to disk
-- Continue appending new frames
-- Atomic manifest write when complete
+**Triggered by camera state:**
+- Standby: frames kept in buffer only, not persisted
+- Armed/Active/Post: frames persisted to disk
+- Main profile (high-res) acquired on-demand for Active cameras
 
 ## Related Documents
-- **Source:** EVENT_INFERENCE_SPEC.md sections (deprecated)
-- **L3_Acquisition:** Non-technical how/when
+- **L3_VideoIngestor.md:** Frame acquisition tactics
+- **L3_DetectionAndTracking.md:** Inference rate control

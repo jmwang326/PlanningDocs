@@ -82,8 +82,8 @@ Reconstruct **what happened** from disconnected observations.
 ### Secondary: Smooth Playback
 When event identified, saved frames provide smooth playback.
 - No missing frames during critical moments
-- Pre-roll captures lead-up
-- Post-roll captures exit
+- 25s processing buffer provides historical context (captures lead-up as artifact of chunked processing)
+- Post-roll captures complete exit/departure
 
 ### Tertiary: Known Identity Recognition
 After weeks of operation, auto-identify regular visitors.

@@ -43,6 +43,16 @@ This file captures topics that need attention to prevent orphaning important iss
 
 **Resolution:** Finalized state model with `visible`, `visible_in_vehicle`, `visible_parked`, `visible_moving`, `offscreen`, `in_structure(XYZ)`, `in_vehicle`, `unknown`, `exited`. Updated L2_Strategy.md, L10_Nomenclature.md, L12_Merging.md for consistency.
 
+### Pre-Roll References (2025-01-13)
+**Issue:** Multiple documents referenced pre-roll buffer (7-10s) that was removed. Conflated acquisition rate (constant 10 FPS) with inference rate (variable by state).
+
+**Resolution:**
+- Removed L3_Acquisition.md (stale, superseded by L3_VideoIngestor.md and L3_DetectionAndTracking.md)
+- Updated L10_Nomenclature.md to remove pre-roll definition, clarify 25s buffer provides historical frames as artifact
+- Updated L1_Mission.md, L12_Architecture.md to reference 25s processing buffer instead of pre-roll
+- Updated L11_Acquisition.md to clarify constant 10 FPS acquisition, 25s rolling buffer, inference rates separate
+- Updated README.md to reference current L3 files
+
 ---
 
 ## Notes
