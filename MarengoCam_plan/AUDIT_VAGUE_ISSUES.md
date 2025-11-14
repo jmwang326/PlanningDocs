@@ -8,43 +8,30 @@
 
 ## CRITICAL ISSUES
 
-### 1. Entry/Exit Cell Definition (L10 TBD)
+### 1. Entry/Exit Cell Definition (L10 TBD) — **RESOLVED**
 **Severity:** HIGH
-**Location:** L10_Nomenclature.md:134-138
+**Location:** L10_Nomenclature.md:132-166
+**Resolution:** Commit d1fb71a (2025-11-14)
 
-**Issue:**
-```
-TBD: The precise logic for determining the entry cell (e.g., first detection, or first stable detection) needs to be defined.
-TBD: The precise logic for determining the exit cell (e.g., last detection) needs to be defined.
-```
-
-**Why it matters:**
-- Grid transition logic depends on entry/exit cells
-- Different definitions → different learned times
-- Example: If exit cell = "last frame with ≥0.5 confidence" vs "last stable detection", grid times differ
-- Affects auto-merge decisions (grid overlap detection)
-
-**Current guess from code:**
-- L13_Detection.md doesn't specify
-- L12_Merging.md uses `track.end_cell` and `track.start_cell` but doesn't define them
-
-**What's needed:**
+**Decision:** Simple boundary-based logic
 ```python
-# Option A: Simple boundary-based
-entry_cell = grid_cell(detections[0].center)
-exit_cell = grid_cell(detections[-1].center)
-
-# Option B: Stable-based (threshold-dependent)
-stable_threshold = 3  # frames
-entry_cell = grid_cell(detections[stable_threshold].center)
-exit_cell = grid_cell(detections[-stable_threshold].center)
-
-# Option C: Quality-based
-entry_cell = grid_cell(detections[first_confident].center)  # conf > 0.7
-exit_cell = grid_cell(detections[last_confident].center)
+entry_cell = 6x6_grid_position(detections[0].bbox_center)
+exit_cell = 6x6_grid_position(detections[-1].bbox_center)
 ```
 
-**Impact:** Will affect all cross-camera merging accuracy
+**Why this works:**
+- Deterministic: no thresholds or tuning
+- Edge noise filtered by learning only from validated merges
+- Grid naturally captures fastest paths via min() operation
+- Quality gate: exclude multi-agent groups and ambiguous merges from grid updates
+
+**Grid learning pipeline:**
+1. Two tracks merge (human-validated or high-confidence auto-merge)
+2. Compute travel_time = track2.start_time - track1.end_time
+3. Update grid: grid[exit_cell, entry_cell] = min(previous, travel_time)
+4. Overlap zones: travel_time < 1.0s → instant auto-merge (single agent check)
+
+**Impact:** All cross-camera merging now has clear, implementable logic
 
 ---
 
