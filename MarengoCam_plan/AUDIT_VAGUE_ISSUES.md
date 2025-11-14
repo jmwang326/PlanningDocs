@@ -108,44 +108,47 @@ def is_overlap(grid_stats):
 
 ---
 
-### 4. Multi-Assignment Merging Semantics Unclear (L2/L13)
+### 4. Multi-Assignment Merging Semantics Unclear (L2/L13) — **PARTIALLY RESOLVED**
 **Severity:** HIGH
-**Location:** L2_Strategy.md:135-138, L13_TrackMerging.md (not found)
+**Location:** L2_Strategy.md:135-138, L13_TrackStateManager.md (updated)
+**Resolution:** Commit 6cccda8 (2025-11-14)
 
-**Issue:**
-```
-Track marked as "possibly Agent A or Agent B" (no probabilities)
-Timeline shows all possibilities
-User can manually resolve if needed
-```
+**Decision:** Detailed constraint-based resolution algorithm
 
-**What's actually underspecified:**
-- How are multi-assignments stored? (One agent_id? Multiple? Probability weights?)
-- When does a multi-assignment become definitive? (User choice? Later evidence?)
-- How does multi-assignment affect downstream decisions? (Timeline visibility? Merge candidates? Re-ID learning?)
-- Can a multi-assignment persist indefinitely, or must it eventually resolve?
+**Implementation:**
+1. **Storage:** Track data structure with `agent_id` (resolved) and `candidate_agents` (unresolved)
+2. **Resolution mechanism:** `apply_elimination_constraints()` progressively narrows candidate list
+3. **Opportunistic application:** Constraints applied when:
+   - Immediately after merge evaluation
+   - Continuously as agent state changes (enters building, exits vehicle)
+   - Re-check all ambiguous tracks when new evidence arrives
 
-**Database representation TBD:**
-- L13_Database.md mentions `candidate_agents TEXT` but no algorithm for propagating/resolving
-
-**What's needed:**
+**Key algorithms:**
 ```python
-class MultiAssignment:
-    """A track that might belong to multiple agents."""
-    track_id: str
-    candidate_agents: List[str]  # [A, B, C]
-    evidence_per_agent: Dict[str, List[str]]  # A: [face_match, grid], B: [timing]
+class Track:
+    agent_id: Optional[str]  # Single resolved agent
+    candidate_agents: List[str]  # Multiple plausible agents
+    elimination_log: Dict[str, str]  # Agents ruled out + reason
 
-    def is_resolvable(self) -> bool:
-        """Check if later evidence can disambiguate."""
-        pass
-
-    def resolve_to(self, agent_id: str):
-        """User/system picks one agent."""
-        pass
+def apply_elimination_constraints(track, active_agents, master_grid):
+    """Apply temporal, spatial, and grid constraints to narrow candidate list"""
+    # Temporal: Agent seen elsewhere at overlapping time
+    # Spatial: Agent in building can't exit to visible camera yet
+    # Grid: Travel time doesn't fit learned paths
 ```
 
-**Impact:** Timeline ambiguity handling, user UX for review queue
+**Multi-assignment resolution example:**
+- Track belongs to [Person-A, Person-B, Unknown-5]
+- Person-A tracked elsewhere 5s after track start → Temporal constraint rules out
+- Person-B in vehicle at time of track start → Spatial constraint rules out
+- Only Unknown-5 remains → RESOLVED
+
+**What still needs specification:**
+- Timeline representation for multi-assignment tracks
+- User UX for manual disambiguation in review queue
+- Learning feedback from user-resolved tracks
+
+**Impact:** Multi-assignment tracks now have clear resolution mechanism and can be progressively disambiguated as evidence arrives
 
 ---
 
