@@ -74,8 +74,9 @@ Non-technical description of **what** we're doing and **why** this approach solv
 
 **Layer 2 - Movement requirement:**
 - YOLO detections must show sustained movement to create tracks
-- Static objects detected but don't generate tracks (no camera state promotion)
-- Example: Parked car visible but dormant, only movement creates Active state
+- **Static objects DO NOT generate active tracks** - stationary agents exist but can't be merged (no track to merge)
+- Example: Parked car is an agent with state `visible_parked`, but has no active track. When car starts moving, track created with state `visible_moving`, enabling cross-camera merging
+- Camera promoted to Active only when moving track exists, not from static detections
 
 **Layer 3 - Track quality:**
 - Duration: must persist across frames (≥3s threshold)
