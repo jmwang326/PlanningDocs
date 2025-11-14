@@ -432,6 +432,8 @@ def chunk_processor_pipeline(cameras: List[int], start_time: float):
 ```
 
 ## Related Documents
+- **L12_YOLOTrackingLeverage:** How to use YOLO local IDs to disambiguate concurrent agents (core reference for LocalTrack enhancements)
+- **L12_ConcurrentTracking:** GROUP track approach (comparison/alternative)
 - **L3_Detection:** Non-technical approach to chunking and tracking
 - **L12_Merging:** Cross-camera merge technical specs
 - **L11_Data:** Database schema for storing chunks and tracks

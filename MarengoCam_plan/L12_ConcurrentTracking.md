@@ -1,9 +1,13 @@
 # Level 12 - Concurrent Tracking
 ## Handling Multiple Agents on the Same Camera
 
+## Status Note
+
+**SUPERSEDED BY L12_YOLOTrackingLeverage.md** - See that document for the preferred approach using YOLO11's native tracking IDs to disambiguate concurrent agents automatically, rather than creating ambiguous GROUP tracks. GROUP track approach (documented here) is a fallback for cases where YOLO tracking is unreliable or when more detailed interaction analysis is needed.
+
 ## Purpose
 
-This document specifies how the system handles multiple agents visible simultaneously on a single camera. The challenge: maintaining separate identity threads when agents overlap, interact, and separate multiple times.
+This document specifies how the system handles multiple agents visible simultaneously on a single camera. The challenge: maintaining separate identity threads when agents overlap, interact, and separate multiple times. See L12_YOLOTrackingLeverage for the primary implementation approach.
 
 ## 1. Core Scenario
 
