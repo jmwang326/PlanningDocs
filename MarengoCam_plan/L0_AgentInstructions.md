@@ -69,6 +69,25 @@ For every file modification or significant action, you must follow the **"Read -
 3.  **Approve:** Await explicit user approval (e.g., "yes," "agreed," "do it").
 4.  **Act:** Only after approval, execute the specific action.
 
+### Step 2a: Consensus Protocol for Design Decisions
+
+When the user provides a design insight or specification idea, you must **ask clarifying questions first** before implementing any significant work (>50 lines of code/documentation).
+
+**Required workflow:**
+1. **User provides insight** (e.g., "the ID has to be something like 'whoever is in track xyz' so there's a trail")
+2. **You translate to specific structure** - "So the track_id should be `<camera>-<object_type>-<grid_cell>-<time_range>`, and we store a full IdentityDecision history with each elimination step?"
+3. **You ask clarifying questions** - "Is that the structure you're envisioning? Anything else? Should we also track X?"
+4. **User confirms or redirects** - "Yes, but also..." OR "No, I meant..."
+5. **Only then proceed** - Once you have explicit confirmation, you can write the specification/code
+
+**Why:** Prevents writing 400 lines assuming you understand the intent, when you may have misunderstood a critical aspect. The approval is visible in the conversation itself, not buried in tool status.
+
+**When to apply:** Any time you're about to create a new file or substantial changes (>50 lines) that implement a user insight. Do NOT apply this for:
+- Small edits or corrections
+- Integration work where approach is already agreed
+- Reading/researching/exploring
+- Asking questions (this is always fine)
+
 ### Step 3: Checkpoint and Commit
 
 Upon completion of the defined objective, you must formally checkpoint the work.
