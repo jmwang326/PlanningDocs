@@ -3,6 +3,16 @@
 ## Purpose
 Technical implementation of cross-camera merge logic.
 
+## Architecture: Evidence Engine + Merging Engine
+
+**Separation of Concerns:**
+- **Evidence Engine:** Gathers all facts and evidence into a report
+- **Track Merging Engine:** Makes decisions based on the evidence report
+
+This document focuses on the **Merging Engine's decision logic**. The Evidence Engine is documented in L3.
+
+---
+
 ## Merge Algorithm
 
 ### Candidate Finding
@@ -23,7 +33,7 @@ def find_merge_candidates():
 - Spatial: distance / time_delta within walking speed (~1 m/s)
 - Portal check: track endpoints near portal locations
 
-### Evidence Scoring (Grid-Driven Hierarchy)
+### Evidence Scoring (Grid-Driven Hierarchy - Track Merging Engine)
 
 **Core insight:** Grid learned from validated merges → enables deterministic merging of new tracks
 
