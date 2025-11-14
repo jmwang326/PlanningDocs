@@ -1147,6 +1147,7 @@ def detect_vehicle_portal_transition(vehicle_track, portal):
 
 ## Related Documents
 - **L12_TrackAgentRelationship:** How tracks map to agents (foundation for merge model)
+- **L12_ConcurrentTracking:** Multi-agent scenarios on single camera (group tracks excluded from merging)
 - **L12_ProcessOfElimination:** System-wide pattern for resolving identity uncertainty (core concept for merge evaluation)
 - **L12_VehicleOccupancy:** Vehicle-specific merge logic
 - **L3_EvidenceEngine:** Fact-gathering for merge candidates
