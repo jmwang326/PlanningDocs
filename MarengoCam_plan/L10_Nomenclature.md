@@ -96,7 +96,7 @@ segment.duration = end_time - start_time  # Seconds
 ```python
 detection.class = "person"  # Lowercase
 detection.confidence = 0.87
-detection.cell_32x32 = (12, 18)  # Row, col
+detection.cell_6x6 = (3, 4)  # Row, col in 6x6 inter-camera grid
 ```
 
 **NOT called:** "inference", "result", "bbox" (use "detection" as noun)
@@ -591,9 +591,9 @@ if min_travel_time == 0:
 **Role:** Camera connection manager and JPEG provider.
 
 **What it does:**
-- Manages camera connections (RTSP/HTTP)
-- Provides JPEG snapshots (main/sub profiles)
-- Serves `/image/{short}?q=60` endpoint
+- Manages camera connections (RTSP from cameras)
+- Provides JPEG snapshots via HTTP API (main/sub profiles)
+- Serves `/image/{short}?q=60` endpoint to MarengoCam
 
 **What it does NOT do:**
 - Video/MP4 recording (Marengo reconstructs from JPEGs)
