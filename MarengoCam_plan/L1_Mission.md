@@ -77,13 +77,13 @@ Forensic reconstruction enables review after-the-fact. Timeline shows complete p
 
 **Why:** Assumptions fail on edge cases (visitor drives your car, vacation disrupts routine). Observable evidence is debuggable.
 
-### Configuration Over Blind Learning
-**User knows the property layout.**
-- Manually configure portals (doors, gates, exits)
-- Let system learn timing (how long to walk through door?)
-- Don't rediscover what's already known
+### Learn from Data, Then Refine with Configuration
+**The system should first learn the property layout empirically.**
+- Let the system discover adjacencies and travel times by observing movement.
+- Once the system has a baseline understanding, use configuration to refine it.
+- Manually define special zones like portals (doors, gates) to add semantic meaning to learned pathways.
 
-**Why:** User has ground truth. Statistical discovery of "doors exist" is wasteful.
+**Why:** This combines the best of both worlds. The system does the heavy lifting of discovering how cameras relate to each other, and the user provides high-level knowledge to correct and enhance that understanding, rather than starting from scratch.
 
 ### Count Evidence, Don't Do Arithmetic
 **Codifiable and observable.**
@@ -91,8 +91,8 @@ Forensic reconstruction enables review after-the-fact. Timeline shows complete p
 - Weak evidence: spatial proximity, timing fit, similar clothing
 
 **Decision:** Count evidence types, use thresholds.
-- ✓ "Strong evidence >= 2 → auto-merge"
-- ✗ "Score = 0.30×time + 0.40×spatial + 0.50×visual"
+- ✓ `"Face Match + Plausible Travel Time → auto-merge"`
+- ✗ `"Score = 0.30×time + 0.40×spatial + 0.50×visual"`
 
 **Why:** Can't debug weights. CAN debug "why did face match fail?"
 

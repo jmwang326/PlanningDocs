@@ -43,6 +43,30 @@ This document provides instructions for AI agents working with the MarengoCam pl
 - Keep entries concise - record of discourse, not exhaustive analysis
 - Track key decision points and alternatives considered
 
+## Standard Operating Procedure
+
+To ensure clarity and prevent context drift, you will adhere to the following three-step collaborative cycle for any major objective.
+
+### Step 1: Define the Objective
+
+Before beginning a new phase of work, you must explicitly define the high-level goal with the user.
+- Propose a clear, single-sentence objective (e.g., "The current objective is to align all L3 documents with the L2 strategy.").
+- Await user approval or amendment before proceeding.
+
+### Step 2: Execute in a Strict Loop
+
+For every file modification or significant action, you must follow the **"Read -> Recommend -> Approve -> Act"** cycle.
+1.  **Read:** Gather all necessary context and information.
+2.  **Recommend:** Present a concise analysis and a clear recommendation. **You must not take any action at this stage.**
+3.  **Approve:** Await explicit user approval (e.g., "yes," "agreed," "do it").
+4.  **Act:** Only after approval, execute the specific action.
+
+### Step 3: Checkpoint and Commit
+
+Upon completion of the defined objective, you must formally checkpoint the work.
+- Propose a `git commit` with a descriptive message summarizing the accomplishment.
+- This concludes the cycle and provides a clean state before defining the next objective.
+
 ## File Organization Rules
 
 ### When to Split Files
@@ -107,49 +131,7 @@ Split a level into multiple files when:
 **What belongs:** APIs, data structures, algorithms, schemas, code specs
 **What doesn't:** Philosophy or strategy (that's L1-L3)
 
-## Uncategorized Items / Work Queue
-
-**Items awaiting proper home in hierarchy:**
-
-### Bootstrap/Prepopulation Projects
-**Status:** Strategic placement unclear (L5?) + technical details needed (L15?)
-**Description:**
-- YOLO remote API for legacy footage processing
-- Re-ID database construction from historical tracks
-- Face ID library seeding from historical footage
-- Inter-camera grid learning from historical transitions (6×6 or other)
-
-**Questions:**
-- Is this L5_Bootstrap (strategy) + L15_Bootstrap (technical)?
-- Or part of L6_Deployment as "Phase 0: Seed Data"?
-
-### Process of Elimination Mechanics
-**Status:** Mentioned in L2, needs detail
-**Description:** Agent A seen elsewhere → rules out Track X = Agent A, cascades
-**Questions:**
-- Tactical detail in L3_Merging?
-- Technical implementation in L12_Merging?
-
-### Multi-Person Merge Strategy
-**Status:** Mentioned in L4_Complexity, underspecified
-**Description:** 2+ people walk together, tracks split on other side
-**Questions:**
-- Expand in L2_Strategy or L3_Merging?
-- L4 currently says "mark as possibly_switched" - enough?
-
-### Nomenclature Update
-**Status:** L10_Nomenclature has outdated terms
-**Description:** Still references 32×32, 8×8 grids (removed from new framework)
-**Action needed:** Update or mark sections as deprecated
-
-### rebootinst.md
-**Status:** Bootstrap document for this reorganization
-**Question:** Archive to deprecated/ or keep as project history?
-
----
-
 ## Version Control
 - **Level 0 evolves continuously** - rewrite as framework clarifies
 - Refinements to structure should be discussed and approved
 - This document reflects current understanding of hierarchy
-- **Uncategorized section** above tracks items awaiting proper placement
