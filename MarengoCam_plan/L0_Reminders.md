@@ -165,3 +165,35 @@ def resolve_identity(track: LocalTrack) -> IdentityResolution:
 **Status:** Clarified, ready for future implementation
 
 ---
+
+### Prerequisites for Writing L12 (2025-11-14)
+**Issue:** Before writing L12 (functional decomposition), we need foundational specs in place.
+
+**L12 = Function signatures + call graphs + data flow**
+- Cannot write `def resolve_identity(track: LocalTrack) -> IdentityResolution:` without knowing what `LocalTrack` is
+- Cannot specify call graphs without understanding event model and orchestration
+
+**Missing prerequisites:**
+
+**Priority 1: L13_Database.md** (exists, needs review/update)
+- Complete schema for LocalTrack, VehicleAgent, grid transitions
+- Define all data types referenced by L12 function signatures
+- Database tables, indexes, relationships
+
+**Priority 2: L11_Data.md** (exists, needs review/update)
+- Data flow architecture (polling vs events vs message queue)
+- Event model (what triggers what)
+- This unlocks call graphs for L12
+
+**Priority 3: L13_Detection.md** (exists, needs review/update)
+- LocalTrack data structure details (most-referenced type)
+- Fields, types, relationships
+
+**Priority 4: Handler orchestration**
+- What's the main loop?
+- What calls the 7 handlers and when?
+- Maybe quick L12_Orchestration.md outline
+
+**Status:** Blocked until L11/L13 specs complete. Come back to L12 later.
+
+---
