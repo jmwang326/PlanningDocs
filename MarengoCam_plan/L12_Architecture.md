@@ -5,9 +5,9 @@ This document outlines the high-level technical components (core processes) of t
 
 ## Core Real-Time Components
 
-### 1. Video Ingestor
-- **Function:** Connects to and consumes video streams from all configured cameras (e.g., via RTSP).
-- **Responsibilities:** Manages connections, handles stream interruptions, and buffers video into standardized chunks for processing.
+### 1. Frame Acquisition (Blue Iris Integration)
+- **Function:** Fetches JPEG snapshots from Blue Iris HTTP endpoints at configured frame rate (10 FPS production, 2 FPS DEV_SLOW).
+- **Responsibilities:** Polls Blue Iris `/image/{short}?q=60` endpoint for sub and main profiles, handles connection errors, maintains frame buffers for pre-roll/post-roll.
 - **Corresponds to L3 Tactic:** `L3_Acquisition.md`
 
 ### 2. Detection & Intra-Camera Tracking

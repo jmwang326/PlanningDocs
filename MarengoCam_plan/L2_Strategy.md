@@ -139,18 +139,24 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - Process of elimination: other agents accounted for → increases confidence
 
 ### Agent States
+
 **Person agent states:**
-- `visible` - person track active
-- `in_vehicle(V)` - entered vehicle V, vehicle tracked
-- `in_structure` - entered building
-- `unknown` - disappeared, no association
+- `visible` - actively tracked walking/moving on camera
+- `visible_in_vehicle(V)` - sporadic detections through vehicle windows (fragmented tracks, special handling)
+- `offscreen` - between cameras (expected portal transition, time-bounded)
+- `in_structure(XYZ)` - entered building/garage via portal (inferred from outdoor cameras)
+- `in_vehicle(V)` - inside vehicle, not visible (fully occluded)
+- `unknown` - lost track, location unclear
+- `exited` - crossed property exit portal, confirmed departure
 
 **Vehicle agent states:**
-- `parked` - stationary, visible
-- `moving` - tracked across cameras
-- `in_structure` - entered garage/carport (portal: garage door)
-- `offscreen` - left property or out of camera view
-- `occupied_by([A, possibly B])` - who's inside (with uncertainty)
+- `visible_parked` - tracked on camera, stationary (boring, camera stays Armed)
+- `visible_moving` - tracked on camera, in motion (interesting, Active tracking)
+- `offscreen` - between cameras (expected portal transition, time-bounded)
+- `in_structure(XYZ)` - entered garage via portal (inferred from outdoor cameras)
+- `unknown` - lost track, location unclear
+- `exited` - crossed property exit portal, confirmed departure
+- `occupied_by([A, possibly B])` - list of person agents inside (with uncertainty)
 
 ### Strategy
 **Don't force person→vehicle assignments:**
@@ -164,8 +170,9 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - Gaps acceptable (forensic reconstruction, not real-time tracking)
 
 **Person-in-vehicle exemptions:**
-- Person with `in_vehicle` state exempt from normal cross-camera merge rules
+- Person with `in_vehicle(V)` or `visible_in_vehicle(V)` state exempt from normal cross-camera merge rules
 - Can't walk camera-to-camera while in car (vehicle does the moving)
+- Sporadic `visible_in_vehicle` detections used for face matching, not continuous tracking
 - Person track effectively "paused" until vehicle parks and person exits
 - Vehicle track becomes proxy for person movement
 

@@ -635,8 +635,17 @@ class AgentAssignment:
 ```python
 class PersonAgent:
     agent_id: int
-    state: Literal["visible", "in_vehicle", "in_structure", "unknown"]
-    vehicle_id: Optional[int]  # If state == "in_vehicle"
+    state: Literal[
+        "visible",
+        "visible_in_vehicle",
+        "offscreen",
+        "in_structure",
+        "in_vehicle",
+        "unknown",
+        "exited"
+    ]
+    vehicle_id: Optional[int]  # If state == "in_vehicle" or "visible_in_vehicle"
+    structure_id: Optional[str]  # If state == "in_structure"
     last_track_id: int
     last_seen_timestamp: float
 ```
@@ -645,7 +654,15 @@ class PersonAgent:
 ```python
 class VehicleAgent:
     agent_id: int
-    state: Literal["parked", "moving", "in_structure", "offscreen"]
+    state: Literal[
+        "visible_parked",
+        "visible_moving",
+        "offscreen",
+        "in_structure",
+        "unknown",
+        "exited"
+    ]
+    structure_id: Optional[str]  # If state == "in_structure"
     occupants: List[OccupantAssignment]
     last_seen_timestamp: float
 
@@ -793,15 +810,16 @@ def find_merge_candidates(person_agent):
     """
     Find merge candidates for person tracks
 
-    IMPORTANT: Skip person if in vehicle
+    IMPORTANT: Skip person if in vehicle (either state)
     """
-    if person_agent.state == "in_vehicle":
+    if person_agent.state in ("in_vehicle", "visible_in_vehicle"):
         # Person movement is vehicle movement
         # Don't look for person→person merges across cameras
-        # Vehicle track is the proxy
+        # Sporadic visible_in_vehicle detections are for face matching only
+        # Vehicle track is the proxy for movement
         return []
 
-    # Normal merge candidate logic for visible/in_structure/unknown
+    # Normal merge candidate logic for visible/offscreen/in_structure/unknown
     return find_cross_camera_candidates(person_agent)
 ```
 
@@ -812,24 +830,26 @@ def detect_vehicle_portal_transition(vehicle_track, portal):
     Vehicle can enter/exit garage (portal: garage door)
 
     State transitions:
-    - moving → in_structure (entered garage)
-    - in_structure → moving (exited garage)
-    - moving → offscreen (left property via driveway portal)
+    - visible_moving → in_structure(Garage) (entered garage)
+    - in_structure(Garage) → visible_moving (exited garage)
+    - visible_moving → exited (left property via exit portal)
     """
     if portal.type == "garage_door":
         if vehicle_track.direction == "entering":
             vehicle_agent.state = "in_structure"
+            vehicle_agent.structure_id = portal.structure_id
         elif vehicle_track.direction == "exiting":
-            vehicle_agent.state = "moving"
+            vehicle_agent.state = "visible_moving"
+            vehicle_agent.structure_id = None
 
     elif portal.type == "property_exit":
-        vehicle_agent.state = "offscreen"
+        vehicle_agent.state = "exited"
 
-        # Occupants also offscreen (still in vehicle)
+        # Occupants also exited property (still in vehicle)
         for occupant in vehicle_agent.occupants:
             person_agent = get_agent(occupant.agent_id)
-            # Person remains in_vehicle state
-            # But timeline notes "left property in Vehicle V"
+            person_agent.state = "exited"  # Person left property via vehicle
+            # Timeline notes "left property in Vehicle V"
 ```
 
 ## Related Documents

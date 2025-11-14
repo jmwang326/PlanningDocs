@@ -13,12 +13,28 @@
 
 **What it's NOT:** Just a detection or a track segment.
 
-**Lifecycle States:**
-- **Created:** New detection with no plausible continuation
-- **Visible:** Currently observable on camera (has track segments)
-- **Hidden:** Not currently visible (possible locations tracked with confidence scores)
-- **Merged:** Multiple track segments determined to be same agent
-- **Terminated:** Left property or inactive for extended period
+**Location States (Person):**
+- `visible` - Actively tracked walking/moving on camera
+- `visible_in_vehicle(V)` - Sporadic detections through vehicle windows (fragmented tracks)
+- `offscreen` - Between cameras (expected portal transition, time-bounded)
+- `in_structure(XYZ)` - Inside building/garage via portal (inferred)
+- `in_vehicle(V)` - Inside vehicle, not visible (fully occluded)
+- `unknown` - Lost track, location unclear
+- `exited` - Crossed property exit portal, confirmed departure
+
+**Location States (Vehicle):**
+- `visible_parked` - Tracked on camera, stationary (boring, camera stays Armed)
+- `visible_moving` - Tracked on camera, in motion (interesting, Active tracking)
+- `offscreen` - Between cameras (expected portal transition, time-bounded)
+- `in_structure(XYZ)` - Inside garage via portal (inferred)
+- `unknown` - Lost track, location unclear
+- `exited` - Crossed property exit portal, confirmed departure
+- `occupied_by([])` - List of person agents inside (with uncertainty)
+
+**Key Behaviors:**
+- All cameras outdoor: `in_structure` always inferred from portal crossing
+- Person in vehicle (either state) exempt from cross-camera person merge rules
+- Vehicle movement state affects camera behavior (parked=boring, moving=interesting)
 
 **Key Properties:**
 - `track_segments[]` - All camera-observable windows
