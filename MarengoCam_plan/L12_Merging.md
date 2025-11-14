@@ -981,6 +981,8 @@ def detect_vehicle_portal_transition(vehicle_track, portal):
 ```
 
 ## Related Documents
-- **Source:** AGENT_TRACKING_AND_MERGE.md (deprecated)
-- **L3_Merging:** Non-technical approach
-- **L4_Complexity:** Where this gets hard
+- **L12_ProcessOfElimination:** System-wide pattern for resolving identity uncertainty (core concept for merge evaluation)
+- **L3_EvidenceEngine:** Fact-gathering for merge candidates
+- **L3_TrackMerging:** Non-technical approach
+- **L2_Strategy:** High-level evidence hierarchy and grid-based strategy
+- **L4_Complexity:** Where merging gets hard

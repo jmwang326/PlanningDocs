@@ -236,3 +236,4 @@ The system's lifecycle is defined by an initial **Bootstrapping** phase (see `L5
 - **L3 (Tactics):** How components implement this strategy
 - **L4 (Complexity):** Where this strategy gets complicated
 - **L10 (Nomenclature):** Terminology definitions
+- **L12_ProcessOfElimination:** System-wide pattern for resolving identity uncertainty through constraints
