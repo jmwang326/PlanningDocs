@@ -35,42 +35,44 @@ exit_cell = 6x6_grid_position(detections[-1].bbox_center)
 
 ---
 
-### 2. "Process of Elimination" Undefined (L2/L3)
+### 2. "Process of Elimination" Undefined (L2/L3) — **RESOLVED**
 **Severity:** HIGH
-**Location:** L2_Strategy.md:140-142, L3_TrackMerging.md:13
+**Location:** L2_Strategy.md:64-80, L12_Merging.md:118-169
+**Resolution:** Commit 88bfa89 (2025-11-14)
 
-**Issue:**
-```
-Process of elimination: Agent A seen elsewhere → rules out Track X belonging to Agent A
-Cascades: ruling out candidates increases confidence in remaining
-```
+**Decision:** Two-tier grid + fast alibi check
 
-**Why it matters:**
-- Sounds simple conceptually, but implementation is complex
-- Example: Agent A at camera A at 12:03, track X at camera B at 12:05
-  - How far apart is "elsewhere"?
-  - What's the time window? (A to B takes 30s, so A can't be X if A is still at B at 12:05)
-  - Does this work across 10 cameras? What's the search radius?
+**Implementation:**
+1. **Detailed grids:** Keep full 6×6×6×6 transitions for all cell pairs
+2. **Fast lookup matrix:** Maintain minimum time per camera-pair for O(N) checks
+3. **Alibi check algorithm:**
+   ```python
+   def find_alternative_sources_for_entry(dest_camera, entry_time, master_grid):
+       """Check if entry agent could come from alternative cameras"""
+       alternatives = []
+       for source_camera in get_all_cameras():
+           min_time = master_grid.fastest_inter_camera_time[(src, dst)]
+           if min_time is None:
+               continue  # No learned path
+           # Check if any track exited source_camera at right time
+           if tracks_exited_in_window(source_camera, entry_time - min_time):
+               alternatives.append(source_camera)
+       return alternatives
+   ```
 
-**Current state:** Never specified. Assumed to be in L13 but not found.
+**How it works:**
+- Before merging track1 → track2, check: "Could entry at track2 come from another camera?"
+- Fast matrix lookup: O(cameras) not O(cameras × 36 × 36)
+- If NO alternatives: deterministic merge (process of elimination)
+- If alternatives exist: route to LLM (ambiguous)
 
-**What's needed:**
-```python
-def process_of_elimination(candidate_track, agent_id, system_agents):
-    """
-    Check if agent_id could possibly be the agent in candidate_track.
+**Why this works:**
+- Avoids cascading multi-assignment decisions
+- Maintains clean single-source bias
+- Scales to many cameras without performance hit
+- Learns only from validated merges (quality gate)
 
-    Rules:
-    1. Agent's last known location vs candidate start location
-    2. Travel time plausibility (can agent reach candidate in time?)
-    3. Does agent have alibi? (seen elsewhere simultaneously?)
-    4. Portal crossing timing (exited portal, entering different portal)?
-    """
-    # Not specified: time window, distance threshold, etc.
-    pass
-```
-
-**Impact:** Multi-candidate disambiguation, vehicle occupancy resolution
+**Impact:** All cross-camera merging now has clear, efficient alibi checking logic
 
 ---
 
