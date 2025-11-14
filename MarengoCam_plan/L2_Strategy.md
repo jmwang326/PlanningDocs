@@ -14,10 +14,10 @@ Non-technical description of **what** we're doing and **why** this approach solv
 **What:** Follow objects frame-to-frame within single camera
 **Why:** YOLO11 provides tracking, reduces per-frame detections to persistent tracks
 **Approach:**
-- Process video in 12s chunks with 2s overlap (real-time constraints)
-- YOLO11 links detections across frames within each chunk
-- Overlap zone allows linking YOLO local IDs across chunk boundaries
-- Build temporal continuity without relying on persistent YOLO IDs
+- YOLO11 links detections across frames to create continuous tracks
+- Movement is required - static detections don't generate tracks
+- Temporal continuity built through chunked processing with overlap zones
+- YOLO provides local tracking IDs within chunks, system links across chunks
 
 ### Merge Across Cameras
 **What:** Link track segments that belong to same agent
@@ -66,16 +66,27 @@ Non-technical description of **what** we're doing and **why** this approach solv
 
 ## Strategy for Noise Filtering
 
-### Real vs Noise
-**What determines real activity:**
+### Multi-Layer Filtering
+**Layer 1 - Motion gate (Standby cameras):**
+- Fast pixel-diff check before YOLO inference
+- Filters static frames (trees, shadows, parked cars)
+- Only frames with motion delta proceed to YOLO
+
+**Layer 2 - Movement requirement:**
+- YOLO detections must show sustained movement to create tracks
+- Static objects detected but don't generate tracks (no camera state promotion)
+- Example: Parked car visible but dormant, only movement creates Active state
+
+**Layer 3 - Track quality:**
+- Duration: must persist across frames (≥3s threshold)
+- Confidence: detector confidence above threshold
 - Object type: person, vehicle, animal (not "unknown")
-- Persistence: tracked across multiple frames
-- Movement: sustained motion (not static detection)
 
 **What gets filtered:**
+- Static frames (motion gate)
 - Brief detections (< threshold duration)
 - Low confidence objects
-- Stationary objects (trees, parked cars)
+- Non-moving detections (parked car, tree)
 - Detector glitches
 
 ### Timeline Construction

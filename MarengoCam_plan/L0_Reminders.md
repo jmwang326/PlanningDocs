@@ -7,6 +7,13 @@ This file captures topics that need attention to prevent orphaning important iss
 
 ## Active Reminders
 
+### Hardcoded "10 cameras" Assumption
+**Context:** L1, L4 documents assume "10 cameras" hardcoded (e.g., "10 cameras × 10 FPS = 100 FPS"). Should be configuration parameter.
+
+**Locations:** L1_Mission.md:79, L1D_Mission.md:90-91, L4_Complexity.md:157
+
+**Status:** Minor - should parameterize but not blocking
+
 ### L12 vs L13 Boundary
 **Context:** L12_Merging.md contains detailed pseudocode. Unclear if this belongs in L12 (architecture/specs) or should move to L13 (implementation detail).
 

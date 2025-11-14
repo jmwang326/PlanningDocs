@@ -15,7 +15,7 @@ How we detect objects and track them within cameras.
 **Adaptive inference rate by camera state:**
 - Standby: sparse (motion gate filters, then minimal YOLO sampling)
 - Armed: moderate (increased sampling to confirm sustained track)
-- Active: all frames (full YOLO tracking)
+- Active: full (maximum YOLO sampling within GPU budget)
 - Post: moderate (reduced but still watching for re-entry)
 
 **Motion gate (Standby only):**
@@ -26,8 +26,9 @@ How we detect objects and track them within cameras.
 
 **Sampling rate determination:**
 - Inference Manager determines actual frame sampling rates based on GPU budget
-- Prioritizes Active cameras, allocates remaining capacity to Armed/Post, minimal to Standby
-- Exact percentages are dynamic (L11_InferenceManager implementation detail)
+- Prioritizes Active cameras (e.g., ~3 Hz sustained), allocates remaining to Armed/Post, minimal to Standby
+- 10 FPS acquisition ensures smooth video playback, not all frames require inference
+- Exact rates are dynamic (L11_InferenceManager implementation detail)
 
 ## Tracking (Intra-Camera)
 
