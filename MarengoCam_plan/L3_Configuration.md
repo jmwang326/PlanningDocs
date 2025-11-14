@@ -142,7 +142,7 @@ portals:
 - Vehicle may move to different camera
 - Requires vehicle occupancy tracking
 
-**See:** L3_IdentityResolution.md for portal transition logic
+**See:** L4_PortalTransitions.md for portal concept, L3_IdentityResolution.md for portal transition logic
 
 ---
 
@@ -598,6 +598,8 @@ alerts:
 - **L3_Gui.md** - Configuration tool overview
 
 ### L4 Concepts
+- **L4_PortalTransitions.md** - Portal handling (structure entry, vehicle entry)
+- **L4_VehicleOccupancy.md** - Vehicle occupancy tracking
 - **L4_ConfigurationUI.md** (planned) - Configuration tool UI specification
 
 ### Implementation

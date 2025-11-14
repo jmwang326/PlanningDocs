@@ -65,7 +65,7 @@ if travel_time < 0.4:  # Overlap zone
 
 **Key insight:** No time gap = same space = same agent (if only one visible)
 
-**See:** L12_GridLearning.md for overlap zone detection
+**See:** L4_GridLearning.md for grid learning concept, overlap zone detection
 
 ---
 
@@ -95,7 +95,7 @@ if abs(travel_time - grid_time) < variance_threshold:
 - If NO → must be from track_A (process of elimination)
 - If YES → ambiguous (multiple candidates)
 
-**See:** L12_AlibiCheck.md for alibi logic details
+**See:** L4_AlibiCheck.md for alibi check concept and process of elimination
 
 ---
 
@@ -200,7 +200,7 @@ if abs(new_travel_time - grid_time) < variance:
 
 **Why:** Prevents noise pollution. Grid learns only from reliable data.
 
-**See:** L12_GridLearning.md for detailed learning algorithm
+**See:** L4_GridLearning.md for grid learning concept and bootstrap strategy
 
 ---
 
@@ -255,7 +255,7 @@ track_2.global_agent_id = Agent_C  # Resolved!
 - Cascading: ruling out candidates increases confidence in remaining
 - Eventually resolves to single agent (or stays ambiguous if multiple remain)
 
-**See:** L12_ProcessOfElimination.md for cascading logic
+**See:** L4_AlibiCheck.md for cascading elimination logic
 
 ---
 
@@ -274,7 +274,7 @@ portals:
     type: "structure_entry"
 ```
 
-**See:** L3_Configuration.md for portal config details
+**See:** L4_PortalTransitions.md for portal handling concept, L3_Configuration.md for portal config
 
 ---
 
@@ -351,10 +351,22 @@ if no_plausible_candidates:
 ### Next Handler
 - **L3_EvidenceProcessing.md** - Resolves uncertain tracks when evidence arrives
 
-### Implementation
-- **L12_GridLearning.md** - Grid learning algorithm (observation, measurement, storage)
-- **L12_AlibiCheck.md** - Alibi check logic (could entry agent have come from elsewhere?)
+### L4 Concepts
+- **L4_GridLearning.md** - 6×6 grid learning concept (travel times, overlap zones, bootstrap)
+- **L4_AlibiCheck.md** - Alibi check and process of elimination
+- **L4_PortalTransitions.md** - Portal handling (structure entry, vehicle entry)
+- **L4_VehicleOccupancy.md** - Vehicle occupancy tracking
+
+### Algorithms
+- **L12_GridLearning.md** - Grid learning algorithm (if needed for detailed pseudocode)
+- **L12_AlibiCheck.md** - Alibi check algorithm (if needed for detailed pseudocode)
 - **L12_ProcessOfElimination.md** - Cascading elimination logic
 - **L12_Merging.md** - Cross-camera merge algorithm
+
+### Implementation
 - **L13_FaceRecognition.md** - CodeProject.AI integration, face library management
 - **L13_ReID.md** - Re-ID embedding extraction and comparison
+- **L14_GridLearningEngine.py** - Grid learning implementation
+- **L14_AlibiChecker.py** - Alibi check implementation
+- **L14_PortalHandler.py** - Portal transition handling
+- **L14_VehicleTracker.py** - Vehicle occupancy tracking
