@@ -52,37 +52,32 @@ This document outlines the high-level technical components (core processes) of t
 - **Responsibilities:** Manages camera settings, portal definitions, detection thresholds, and evidence tuning parameters. This is the system's central control panel.
 - **Corresponds to L3 Tactic:** `L3_Configuration.md`
 
-### 10. Learning & Training Subsystem
+### 10. Portals
+- **Function:** Portals are a core concept representing a defined transition point where an object can move between camera views or effectively exit the visible space.
+- **Responsibilities:** They are defined in the `Configuration System`. A portal crossing is a key piece of evidence used by the `Evidence Engine` and `Track Merging Engine`.
+- **Clarification:** A portal is not just a redundant path between two camera zones. It can also represent a location where an object can be legitimately hidden for a period (e.g., entering a building, a garage, or a dense thicket). This allows the system to tolerate longer temporal gaps in tracking without losing the agent's identity, as the "time spent in portal" is a justifiable, albeit unobserved, part of the agent's journey.
+
+### 11. Learning & Training Subsystem
 - **Function:** Offline processes responsible for improving the system's accuracy over time.
 - **Sub-components:**
   - **Grid Spatial Learner:** Analyzes historical validated merges to learn the typical time and spatial relationships between camera grid cells.
   - **Face Library Builder:** Uses validated, human-confirmed merges to build and refine the library of known faces.
 
-### 11. Inference Manager
+### 12. Inference Manager
 - **Function:** A central dispatcher that manages a portfolio of AI inference resources, including local GPUs, remote APIs, and the human review queue.
 - **Responsibilities:** Receives generic inference requests (e.g., "run detection," "adjudication"). Selects the best available provider based on priority and health. It treats the human review queue as just another "provider," elegantly integrating the Human-in-the-Loop process.
 - **Corresponds to L3 Tactic:** `L3_InferenceManager.md`
 
-### 12. Human-in-the-Loop System
-- **Function:** Manages the queue and workflow for human validation and adjudication tasks.
-- **Responsibilities:** Presents uncertain merge decisions to human reviewers via the GUI, captures their decisions, and feeds validated results back to the Track State Manager and Learning subsystems.
-- **Corresponds to L3 Tactic:** `L3_HumanInTheLoop.md`
-
 ### 13. Core Data Structures
 
-These data structures are fundamental to managing identity and uncertainty within the system. They are primarily created and managed by the `Track State Manager`.
+These data structures, defined in the `L13_Database.md` schema, are fundamental to managing identity and uncertainty. They are primarily created and managed by the `Track State Manager`.
 
 *   **Agent:**
     *   **Represents:** A persistent, unified identity (e.g., "The Gardener," "Unknown Person #1," "Delivery Truck").
-    *   **Contains:** A unique Agent ID, known characteristics (e.g., a face vector for a known person), and a timeline composed of assigned tracks.
-    *   **Purpose:** To provide the continuous, long-term history of an entity's movements across all cameras and all time.
+    *   **Contains:** A unique `agent_id` and links to known characteristics (e.g., an `identity_id` if the person is named).
+    *   **Purpose:** To group multiple `Track` observations into a single, continuous history of an entity's movements across all cameras and all time.
 
-*   **Original Track:**
-    *   **Represents:** An immutable, continuous observation of an object from a *single camera*. This is the ground-truth record of what a camera saw.
-    *   **Contains:** A unique Track ID, the camera ID, start/end times, a path of bounding boxes, pointers to the `previous` and `next` Original Tracks from the same camera, and **a list of references to all `Track Hypotheses` associated with it.**
-    *   **Purpose:** To serve as the raw, unalterable evidence of an observation and act as the anchor for all identity hypotheses.
-
-*   **Track Hypothesis (or "Track Copy"):**
-    *   **Represents:** A lightweight, disposable link that proposes an `Original Track` belongs to a specific `Agent`.
-    *   **Contains:** A reference to the `Original Track` and a reference to the `Agent` it might belong to. It may also contain a confidence score or the specific evidence that generated this hypothesis.
-    *   **Purpose:** To allow the system to manage uncertainty. An `Original Track` can have multiple `Track Hypotheses` linking it to different `Agents` simultaneously. When new evidence resolves the uncertainty, the incorrect hypotheses are simply deleted.
+*   **Track:**
+    *   **Represents:** A continuous observation of an object from a *single camera*.
+    *   **Contains:** A unique `track_id`, the `camera` it was on, start/end times, and a direct link via `agent_id` to the `Agent` it currently belongs to.
+    *   **Handling Uncertainty:** To manage ambiguity, a `Track` also has a `candidate_agents` field. If the system is unsure which `Agent` a `Track` belongs to, it can hold a list of possibilities here until the uncertainty is resolved. This is a pragmatic approach to avoid making incorrect permanent assignments.

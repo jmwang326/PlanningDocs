@@ -114,6 +114,14 @@ detection.cell_6x6 = (3, 4)  # Row, col in 6x6 inter-camera grid
 - **Overlap:** A time of `0` indicates a direct camera overlap zone.
 - **Unlearned:** A value of `-1` (or `MAX_INT`) represents an unlearned path.
 
+### Entry Cell
+**Purpose:** To define the specific grid cell where a track segment first appears on a camera. This serves as the destination point in a cross-camera transition.
+**TBD:** The precise logic for determining the entry cell (e.g., first detection, or first stable detection) needs to be defined.
+
+### Exit Cell
+**Purpose:** To define the specific grid cell where a track segment last appears on a camera before disappearing. This serves as the source point for a cross-camera transition.
+**TBD:** The precise logic for determining the exit cell (e.g., last detection) needs to be defined.
+
 **Learning:**
 - The grid is populated and refined over time by recording the time deltas from high-confidence, validated merges. The system always stores the *lowest* observed time.
 

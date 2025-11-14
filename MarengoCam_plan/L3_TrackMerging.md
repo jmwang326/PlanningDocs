@@ -24,6 +24,12 @@ The **Track Merging Engine** is the primary decision-making component for agent 
     - `add_to_review_queue(source_track, dest_track, reason)`
     - `log_rejected_merge(source_track, dest_track, reason)`
 
+### 2.1. Handling Portals
+A **Portal** is a special type of grid cell representing a location where an agent can become concealed for an indeterminate amount of time (e.g., a garage, a building entrance). Standard grid-based travel time logic does not apply.
+
+- **Exit/Entry Plausibility:** When a track disappears into a Portal and a new track later emerges from the *same Portal*, the transition is considered plausible regardless of the time gap.
+- **Reliance on Secondary Evidence:** Since time is not a reliable factor, the decision to merge will depend more heavily on secondary evidence, such as appearance similarity (Re-ID) and the process of elimination. A high Re-ID score for a track emerging from the same portal would lead to an `AUTO_MERGE`, whereas a lower score might require `REVIEW_LLM`.
+
 ## 3. Operational Flow
 
 1.  **Invocation:** The `Track State Manager` asks the `Track Merging Engine` to evaluate a potential merge.

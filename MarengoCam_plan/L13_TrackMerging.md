@@ -84,15 +84,26 @@ The grid is continuously refined as new, high-confidence merges are validated. T
 
 ## 5. Algorithm: Process of Elimination
 
-**Status: Needs Refinement**
-
 This logic is applied as a secondary filter when the initial Merge Candidate Selection results in multiple plausible candidates. It serves to reduce ambiguity by using an agent's known location to rule out impossible merges.
 
 1.  **Trigger:** The Merge Candidate Selection algorithm produces multiple plausible candidates for a single `source_track`.
-2.  **Input:** A list of `plausible_candidate_tracks`.
+
+2.  **Input:**
+    - `source_track`: The track that requires a merge decision.
+    - `plausible_candidate_tracks`: The list of potential tracks to merge with.
+
 3.  **Process:**
-    a. For each `candidate_track` in the list, identify its associated `candidate_agent`.
-    b. Query the `Track State Manager` to determine if this `candidate_agent` has any other active tracks on *any other camera* that overlap in time with the `source_track`.
-    c. **Elimination:** If the `candidate_agent` was verifiably present on a different, non-adjacent camera at the same time, it is logically impossible for it to also be the agent in the `source_track`. This `candidate_track` is removed from the list of possibilities.
+    a. Initialize an empty list, `eliminated_candidates`.
+    b. For each `candidate_track` in `plausible_candidate_tracks`:
+        i. Get the `candidate_agent` associated with the `candidate_track`.
+        ii. Query the `Track State Manager` for the `candidate_agent`'s complete track history (`agent_track_history`).
+        iii. For each `historical_track` in `agent_track_history`:
+            - **Check for Temporal Overlap:** Determine if `historical_track` and `source_track` overlap in time. An overlap occurs if:
+              `(historical_track.start_time <= source_track.end_time) AND (historical_track.end_time >= source_track.start_time)`.
+            - **Check for Location Conflict:** If a temporal overlap exists, check if the `historical_track` is on a different camera that is not part of the current merge evaluation (i.e., `historical_track.camera_id` is not the `source_camera_id` or the `dest_camera_id`).
+            - **Mark for Elimination:** If both conditions are met, it creates a logical impossibility. The `candidate_track` is added to the `eliminated_candidates` list, and the inner loop can break.
+
+    c. **Filter the list:** Remove all tracks from `plausible_candidate_tracks` that are present in the `eliminated_candidates` list.
+
 4.  **Output:**
     - A reduced list of candidate tracks. If the list is reduced to a single candidate, it can be treated as a high-confidence match and routed for Re-ID confirmation. If multiple candidates still remain, the ambiguity is passed to the `Inference Manager` for a more detailed review.

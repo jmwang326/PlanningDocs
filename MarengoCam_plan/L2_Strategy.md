@@ -44,16 +44,21 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - System operates with partial timeline
 - Don't force wrong merge to avoid uncertainty
 
-### Grid-Based Spatial Learning
-**What:** A single `6x6` inter-camera grid learns which camera regions connect. This is the sole system for inter-camera learning, superseding older, more complex multi-grid approaches.
-**Why:** Distinguishes overlap (same view) from portals (movement between cameras).
+### Grid-Based Spatial Learning & Portals
+**What:** We use a combination of automated grid learning and manual configuration to understand how agents move between cameras and into occluded spaces. This relies on distinguishing two types of "portals".
+**Why:** This hybrid approach uses automation for discovering visible pathways and manual setup for defining semantically important zones that the system cannot infer on its own.
 
 **Approach:**
-- Bootstrap from historical validated merges
-- Grid learns typical transition times between cell pairs
-- Overlap zones (typical_time ≈ 0): auto-merge same agent
-- Portal zones (typical_time 1-15s): normal evidence evaluation
-- No connection (no data): reject or manual portal config
+- **Transitional Portals (Learned):** These are connections where an agent moves between two *visible* camera views. The `6x6` inter-camera grid automatically learns the typical travel times for these transitions from validated merges.
+  - Overlap zones (typical_time ≈ 0) are a special case of transitional portals, enabling high-confidence auto-merges.
+  - Standard transitions (typical_time > 0) are used as evidence for plausible merges.
+
+- **Terminal Portals (Configured):** These are user-defined zones where an agent can legitimately enter an *occluded* space (e.g., a house door, garage door).
+  - The system cannot learn these automatically. The user must define their location.
+  - When an agent's track ends in a terminal portal, the `TrackStateManager` transitions the agent to a non-visible state like `in_structure(garage)` or `in_vehicle(V)`.
+  - Travel time is not the primary factor for these portals; the key is the event of crossing the defined boundary.
+
+- **Combined Power:** The grid handles the complex task of learning all visible pathways, while manual configuration provides the critical ground-truth for where agents can disappear from view.
 
 ### Learn from Corrections
 **What:** Human/LLM validations improve future decisions
