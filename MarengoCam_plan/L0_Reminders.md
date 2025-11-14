@@ -56,3 +56,21 @@ This file captures topics that need attention to prevent orphaning important iss
 - This file persists across all agent sessions working on MarengoCam planning
 - Add reminders when coherence issues discovered, remove when resolved
 - Keep entries concise - just enough context to recall the issue
+
+### L3 Tactical Docs Need Handler Alignment (2025-11-14)
+**Issue:** L3 tactical documents use old terminology and component names, need alignment with track-centric architecture and 4 handlers.
+
+**Mapping:**
+- L3_DetectionAndTracking.md → ChunkProcessor + TemporalLinker tactics
+- L3_TrackMerging.md → IdentityResolver tactics (rename needed)
+- L3_EvidenceEngine.md → Part of IdentityResolver (sub-component)
+- L3_TrackStateManager.md → Orchestration (currently stub)
+
+**Terminology updates needed:**
+- "Track segment" → "LocalTrack"
+- "Track Merging Engine" → "IdentityResolver"
+- Add handler cross-references to L2_DecisionArchitecture
+
+**Status:** In progress - L2 level updated (L2_Strategy, L2_DecisionArchitecture, L10_Nomenclature), L3 updates pending
+
+---
