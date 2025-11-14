@@ -11,40 +11,46 @@ This document outlines the high-level technical components (core processes) of t
 - **Corresponds to L3 Tactic:** `L3_VideoIngestor.md`
 
 ### 2. Detection & Intra-Camera Tracking
-- **Function:** Processes video chunks using the object detection and tracking model (YOLOv11).
+- **Function:** Processes video chunks using the object detection and tracking model (YOLO11).
 - **Responsibilities:** Identifies objects (people, vehicles) in frames and links them across frames within a single camera's view to create initial "tracklets." Filters out initial noise based on persistence and movement.
-- **Corresponds to L3 Tactic:** `L3_Detection.md`
+- **Corresponds to L3 Tactic:** `L3_DetectionAndTracking.md`
 
 ### 3. Track State Manager
 - **Function:** The central state machine for the entire system.
 - **Responsibilities:** Manages the lifecycle of all tracks and agents. Tracks states include `new`, `active`, `lost`, `uncertain_merge`, `merged`, and `archived`. This component orchestrates the flow of data between the other components.
+- **Corresponds to L3 Tactic:** `L3_TrackStateManager.md`
 
 ### 4. Evidence Engine
 - **Function:** Gathers all possible evidence for potential track merges.
 - **Responsibilities:** For any two tracks, it calculates face recognition similarity, spatial/temporal proximity, visual similarity (e.g., clothing color), and checks for portal crossings. It provides this evidence package to the Merging Engine.
+- **Corresponds to L3 Tactic:** `L3_EvidenceEngine.md`
 
 ### 5. Track Merging Engine
 - **Function:** Decides whether to merge two or more tracklets into a single "agent" timeline.
 - **Responsibilities:** Applies the evidence hierarchy defined in `L2_Strategy.md`. Executes merges based on definitive evidence (face match) or weighted evidence, and flags merges that are uncertain.
-- **Corresponds to L3 Tactic:** `L3_Merging.md`
+- **Corresponds to L3 Tactic:** `L3_TrackMerging.md`
 
 ### 6. Timeline Reconstruction
 - **Function:** Converts the raw data of merged agent tracks into a human-readable narrative.
 - **Responsibilities:** Generates descriptive event logs (e.g., "Person A entered via East Gate at 10:32 AM") from the agent's path through camera zones and portals.
+- **Corresponds to L3 Tactic:** `L3_TimelineReconstruction.md`
 
 ### 7. Panel Assembly Service
 - **Function:** A specialized, stateless image processing service.
 - **Responsibilities:** Creates standardized visual artifacts (e.g., 2x6 comparison panels) for review. It handles all image fetching, cropping, resizing, upscaling, and composition, returning only a file path to the final image.
+- **Corresponds to L3 Tactic:** `L3_PanelAssemblyService.md`
 
 ### 8. Presentation Layer (GUI)
 - **Function:** The user-facing interface for viewing and interacting with the system's output.
 - **Responsibilities:** Displays the reconstructed agent timelines, allows users to review video clips, and provides the interface for the "Human-in-the-Loop" review process by presenting tasks from the review queue.
+- **Corresponds to L3 Tactic:** `L3_Gui.md`
 
 ## Supporting Systems
 
 ### 9. Configuration System
 - **Function:** Provides configuration data to all other components.
 - **Responsibilities:** Manages camera settings, portal definitions, detection thresholds, and evidence tuning parameters. This is the system's central control panel.
+- **Corresponds to L3 Tactic:** `L3_Configuration.md`
 
 ### 10. Learning & Training Subsystem
 - **Function:** Offline processes responsible for improving the system's accuracy over time.
@@ -55,8 +61,14 @@ This document outlines the high-level technical components (core processes) of t
 ### 11. Inference Manager
 - **Function:** A central dispatcher that manages a portfolio of AI inference resources, including local GPUs, remote APIs, and the human review queue.
 - **Responsibilities:** Receives generic inference requests (e.g., "run detection," "adjudication"). Selects the best available provider based on priority and health. It treats the human review queue as just another "provider," elegantly integrating the Human-in-the-Loop process.
+- **Corresponds to L3 Tactic:** `L3_InferenceManager.md`
 
-### 12. Core Data Structures
+### 12. Human-in-the-Loop System
+- **Function:** Manages the queue and workflow for human validation and adjudication tasks.
+- **Responsibilities:** Presents uncertain merge decisions to human reviewers via the GUI, captures their decisions, and feeds validated results back to the Track State Manager and Learning subsystems.
+- **Corresponds to L3 Tactic:** `L3_HumanInTheLoop.md`
+
+### 13. Core Data Structures
 
 These data structures are fundamental to managing identity and uncertainty within the system. They are primarily created and managed by the `Track State Manager`.
 
