@@ -65,8 +65,9 @@ Non-technical description of **what** we're doing and **why** this approach solv
 **Why:** System learns what "same person" looks like over time
 
 **Approach:**
-- Face library builds from validated merges
-- Grid learns transition patterns from validated cross-camera merges
+- Face library builds from high-confidence merges only (face recognition ≥ threshold OR validated human review)
+- Uncertain merges refine timeline tracking but don't pollute face library (prevent cascading errors)
+- Grid learns transition patterns from validated cross-camera merges (clean data only)
 - Face recognition improves as library grows
 
 ## Strategy for Noise Filtering

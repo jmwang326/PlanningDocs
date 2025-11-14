@@ -189,7 +189,34 @@ What's hard, what's tuning-dependent, and where failures occur.
 
 ---
 
-## Learning Risks
+## Candidate Track Risks
+
+### Threshold Tuning
+**TUNING: Duration (3.0s), movement score, ARM timeout**
+
+**Too loose (low threshold):** Noise promoted to agents (false positives)
+**Too strict (high threshold):** Real brief activity missed (legitimate quick events)
+
+**Approach:** Start conservative (3.0s + 0.6 movement score), calibrate from real footage
+
+---
+
+### Candidate Timeout
+**HARD: When ARM state expires without promotion**
+
+**Challenge:**
+- If candidate never reaches 3s (motion stops/pauses), should ARM persist?
+- Long ARM timeouts → storage/memory waste
+- Short ARM timeouts → miss resuming activity
+
+**Risk:**
+- Person pauses mid-motion → candidate discarded → activity split across two agents
+- Motion detector glitch causes false ARM expiration
+
+**Mitigation:**
+- Reasonable ARM timeout (e.g., 15-30 seconds) balances recall vs resource usage
+- Motion gate continues checking during Armed (re-arms if motion resumes)
+- Accept some false splits; timeline reconstruction resolves them
 
 ---
 

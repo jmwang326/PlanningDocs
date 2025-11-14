@@ -80,6 +80,21 @@ segment.duration = end_time - start_time  # Seconds
 
 ---
 
+### Candidate Track
+**What it is:** Provisional, ephemeral accumulation of detections during Armed state, waiting for confirmation.
+
+**When created:** Motion gate + sparse YOLO detection appears in Standby, triggers camera to Armed state.
+
+**When promoted:** After ≥3 seconds of sustained detections with sufficient movement score.
+
+**When discarded:** If motion stops before 3s threshold, or ARM timeout expires.
+
+**Key property:** Never persisted to database (memory-only). Only promoted candidate tracks become formal track segments.
+
+**Not called:** "track candidate", "provisional track" (use "candidate track" consistently)
+
+---
+
 ### Detection
 **What it is:** Single YOLO inference result for one frame, one bounding box.
 
@@ -165,17 +180,16 @@ if min_travel_time == 0:
 
 **Behavior:**
 - Acquisition: 10 FPS (sub profile)
-- Inference: Moderate (increased sampling to confirm sustained track)
+- Inference: Moderate (candidate track accumulating, sampling increased to confirm)
 - Frame persistence: Yes (all sub frames saved to disk)
 - Main profile: Not captured
 - Sampling rate: Determined by Inference Manager based on GPU budget
 
-**Trigger:**
-- Detection appeared via Standby motion gate + sparse YOLO sampling
+**What happens:** Motion gate triggers → candidate track created and begins accumulating detections → waiting for ≥3s sustained movement.
 
 **Transitions:**
-- → Active: Agent confirmed (≥3s sustained movement)
-- → Standby: Expires after arm_expire_s without detections
+- → Active: Candidate promoted (≥3s sustained movement + sufficient movement score)
+- → Standby: Candidate discarded (motion stops before threshold, or ARM timeout expires)
 
 **Always write as:** "Armed" (capitalized)
 

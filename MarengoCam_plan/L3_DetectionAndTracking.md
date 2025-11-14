@@ -65,9 +65,11 @@ How we detect objects and track them within cameras.
 
 ### Track Quality
 **Filters for "real" activity:**
-- Duration: track must persist (e.g., ≥3 seconds)
-- Movement: sustained motion (not static)
+- Duration: sustained motion across ≥3 seconds (via candidate track accumulation during Armed)
+- Movement: object must be moving (not static)
 - Confidence: detector confidence above threshold
+
+**Candidate Track Lifecycle:** Motion gate triggers → Armed state → candidate track accumulates detections → if ≥3s sustained movement → promoted to formal track segment → agent confirmed. If motion stops before threshold → candidate discarded, camera returns to Standby.
 
 ## Camera States
 
@@ -79,8 +81,8 @@ How we detect objects and track them within cameras.
 - Behavior: increase inference rate to moderate, begin saving frames to disk
 
 **Armed → Active:**
-- Trigger: track sustained (duration threshold met)
-- Behavior: full inference (all frames), save all frames (sub + main)
+- Trigger: candidate track promoted (≥3s sustained movement confirmed)
+- Behavior: full inference (all frames), save all frames (sub + main), create formal track segment
 
 **Active → Post:**
 - Trigger: no detections for quiet period

@@ -169,7 +169,10 @@ class GlobalAgent:
 
 def assign_global_agent_id(local_track: LocalTrack) -> int:
     """
-    Assign or reuse global agent ID for a local track
+    Assign or reuse global agent ID for a local track.
+
+    Note: local_track is created from a promoted CandidateTrack.
+    See L13_TrackStateManager.promote_candidate_to_agent() for candidate lifecycle.
 
     Cases:
     1. Chunk continuation (has previous_chunk_track) → inherit global ID
