@@ -74,3 +74,32 @@ This file captures topics that need attention to prevent orphaning important iss
 **Status:** In progress - L2 level updated (L2_Strategy, L2_DecisionArchitecture, L10_Nomenclature), L3 updates pending
 
 ---
+
+### L3 Restructure to Match 7 Components (2025-11-14)
+**Issue:** L3 tactical docs should match the 7 components from L2_DecisionArchitecture exactly.
+
+**Target structure (7 L3 files, ~100 lines each):**
+1. L3_ChunkProcessing.md - ChunkProcessor tactics (filtering, motion gate, ≥3s threshold)
+2. L3_TemporalLinking.md - TemporalLinker tactics (overlap zone, appearance similarity)
+3. L3_IdentityResolution.md - IdentityResolver tactics (evidence hierarchy, grid learning, alibi checks, process of elimination) - **may be ~150-200 lines (dense but acceptable)**
+4. L3_EvidenceProcessing.md - EvidenceProcessor tactics (uncertainty resolution, cascading updates)
+5. L3_Gui.md - Timeline viewer, review queue (exists)
+6. L3_Configuration.md - Portal config, thresholds (exists)
+7. L3_SystemHealth.md - Performance monitoring (NEW)
+
+**Files to consolidate/move:**
+- L3_DetectionAndTracking.md → split to L3_ChunkProcessing + L3_TemporalLinking
+- L3_TrackMerging.md → rename to L3_IdentityResolution.md
+- L3_EvidenceEngine.md → merge into L3_IdentityResolution or L3_EvidenceProcessing
+- L3_HumanInTheLoop.md → merge into L3_EvidenceProcessing
+- L3_InferenceManager.md, L3_VideoIngestor.md, L3_PanelAssemblyService.md, L3_TimelineReconstruction.md, L3_TrackStateManager.md → move to L13 or _archive
+
+**Detailed algorithms push to L12:**
+- L12_GridLearning.md (if L3_IdentityResolution gets too long)
+- L12_AlibiCheck.md
+- L12_ProcessOfElimination.md (already exists)
+- L12_Merging.md (already exists)
+
+**Status:** L2 streamlined (complete), L3 restructure pending
+
+---
