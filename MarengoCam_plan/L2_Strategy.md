@@ -30,10 +30,9 @@ Non-technical description of **what** we're doing and **why** this approach solv
 
 **Hierarchy:**
 1. **Face recognition** (known people auto-merge)
-2. **Grid overlap + single candidate** (camera overlap, must be same agent)
-3. **Grid overlap + multiple candidates** (constrained multi-assignment)
-4. **Grid portal + evidence** (time/space gating, then LLM/human)
-5. **No grid data** (reject or manual portal fallback)
+2. **High-Confidence Time/Space Match** (e.g., validated grid overlap with a single candidate)
+3. **Plausible Time/Space Match** (e.g., learned grid adjacency, then evaluated with other evidence)
+4. **LLM / Human Adjudication** (for ambiguous cases)
 
 ### Accept Uncertainty
 **What:** Some tracks can't be assigned definitively
@@ -46,8 +45,8 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - Don't force wrong merge to avoid uncertainty
 
 ### Grid-Based Spatial Learning
-**What:** 6×6 inter-camera grid learns which camera regions connect
-**Why:** Distinguishes overlap (same view) from portals (movement between cameras)
+**What:** A single `6x6` inter-camera grid learns which camera regions connect. This is the sole system for inter-camera learning, superseding older, more complex multi-grid approaches.
+**Why:** Distinguishes overlap (same view) from portals (movement between cameras).
 
 **Approach:**
 - Bootstrap from historical validated merges
@@ -170,14 +169,8 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - Person track effectively "paused" until vehicle parks and person exits
 - Vehicle track becomes proxy for person movement
 
-### Operational Modes: Offline Learning, Online Learning, and Autonomous
-The system's lifecycle is divided into three distinct modes, providing a clear path from initial setup to mature, autonomous operation.
-
-*   **Offline Learning Mode:** This is the initial bootstrapping phase, executed by a set of offline tools and scripts. The goal is to process a large corpus of historical video data to build the first version of the system's learned models (e.g., the face library, camera overlap data) before the system goes live.
-
-*   **Online Learning Mode:** The initial live production mode. The system processes real-time data but operates conservatively. It queues uncertain merge decisions for human review, using the feedback to continuously improve its models. This is the primary "human-in-the-loop" phase.
-
-*   **Autonomous Mode:** The mature production mode. After a period of successful online learning, the system is trusted to operate with a more aggressive auto-merge strategy, requiring minimal human supervision for routine events.
+### System Lifecycle
+The system's lifecycle is defined by an initial **Bootstrapping** phase (see `L5_Bootstrap.md`) followed by a phased live deployment (see `L6_Deployment.md`).
 
 ## Related Documents
 - **L1 (Mission):** Why we're solving this problem (core values, goals)

@@ -45,7 +45,15 @@ This document provides instructions for AI agents working with the MarengoCam pl
 
 ## Standard Operating Procedure
 
-To ensure clarity and prevent context drift, you will adhere to the following three-step collaborative cycle for any major objective.
+To ensure clarity and prevent context drift, you will adhere to the following collaborative cycle for any major objective.
+
+### Task Management with TODO Lists
+
+For any multi-step objective, we will liberally use a visible TODO list to track progress.
+
+1.  **Initialization:** At the start of a new objective, I will create a checklist of the high-level tasks involved.
+2.  **Execution:** I will mark tasks as `in-progress` as I begin work and `completed` as we finish them.
+3.  **Purpose:** This provides a persistent, at-a-glance view of the overall plan, our current focus, and what's next, ensuring we remain aligned.
 
 ### Step 1: Define the Objective
 

@@ -18,6 +18,13 @@ Phased rollout, timelines, and success criteria.
 - Month 2+: Auto-merge known people via face library
 - Mature: 90%+ auto-merge
 
+## System Operating Modes
+The live system operates in one of two modes, which define its level of autonomy and reliance on human feedback. This follows the initial, one-time **Bootstrapping** phase (see `L5_Bootstrap.md`).
+
+*   **Online Learning Mode:** The initial live production mode. The system processes real-time data but operates conservatively. It queues uncertain merge decisions for human review, using the feedback to continuously improve its models. This is the primary "human-in-the-loop" phase.
+
+*   **Autonomous Mode:** The mature production mode. After a period of successful online learning, the system is trusted to operate with a more aggressive auto-merge strategy, requiring minimal human supervision for routine events.
+
 ## Phase 0: Foundation (Weeks 1-2)
 
 ### Goal

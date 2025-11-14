@@ -1,52 +1,63 @@
-# L2: Strategy Principles
+# Level 2 - Strategy Principles
 
-**Purpose:** To document the foundational strategic principles that guide the design and implementation of the entire system. These principles are the "why" behind the technical choices in the L10+ documents. They ensure that development remains focused on a coherent, debuggable, and evidence-based approach.
+## Purpose
+This document summarizes the core principles that guide the system's strategy. It is the single source of truth for the "why" behind our architectural decisions.
 
----
+## Principles
 
-## 1. Agent-Centric Thinking
-**Principle:** Agents are persistent entities (people, vehicles), not transient detections.
+### 1. Agent-Centric Thinking
+**Agents are entities** (people, vehicles), not just detections.
+- A person exists even when not visible (inside building, under blanket, between cameras)
+- Timeline follows the agent, not the camera
+- Goal: "What did Person A do?" not "What did Camera A see?"
 
-- An agent is assumed to exist even when not visible (e.g., inside a building, occluded by an object, or between cameras).
-- The system's primary goal is to construct a timeline that follows the agent's journey across the property, not simply to list what each camera saw.
-- This means the fundamental question is always "What did Agent A do?" rather than "What did Camera X see?"
+### 2. Observable Evidence Only
+**Use what you can see, not what you assume.**
+- No statistical priors ("Person A always drives Car B")
+- No routine modeling ("Mail arrives at 3pm")
+- Evidence: face match, time/space proximity, visual similarity, portal crossing
 
----
+**Why:** Assumptions fail on edge cases (visitor drives your car, vacation disrupts routine). Observable evidence is debuggable.
 
-## 2. Observable Evidence Only
-**Principle:** The system must make decisions based only on what it can see, not on what it assumes or predicts.
+### 3. Learn from Data, Then Refine with Configuration
+**The system should first learn the property layout empirically.**
+- Let the system discover adjacencies and travel times by observing movement.
+- Once the system has a baseline understanding, use configuration to refine it.
+- Manually define special zones like portals (doors, gates) to add semantic meaning to learned pathways.
 
-- **No Statistical Priors:** The system will not use historical patterns like "Person A usually drives Car B" or "The mail carrier arrives at 3 PM" to influence merge decisions. While these patterns are often true, they are brittle and fail in edge cases (a visitor drives the car, a holiday changes the mail schedule).
-- **Focus on Verifiable Evidence:** Decisions will be based on concrete, observable evidence such as face recognition matches, vehicle license plates, Re-ID similarity, and the spatio-temporal plausibility of a track moving through a known inter-camera path.
-- **Debuggability:** An evidence-based system is debuggable. A failed merge can be traced back to a specific piece of evidence (e.g., "the face match failed because of poor lighting"), whereas a failure in a statistical model is often opaque.
+**Why:** This combines the best of both worlds. The system does the heavy lifting of discovering how cameras relate to each other, and the user provides high-level knowledge to correct and enhance that understanding, rather than starting from scratch.
 
----
+### 4. Count Evidence, Don't Do Arithmetic
+**Codifiable and observable.**
+- Strong evidence: face match, portal crossing, only candidate
+- Weak evidence: spatial proximity, timing fit, similar clothing
 
-## 3. Count Evidence, Don't Do Arithmetic
-**Principle:** Merge decisions will be made by counting discrete pieces of strong and weak evidence, not by summing weighted scores.
+**Decision:** Count evidence types, use thresholds.
+- ✓ `"Face Match + Plausible Travel Time → auto-merge"`
+- ✗ `"Score = 0.30×time + 0.40×spatial + 0.50×visual"`
 
-- **Codifiable and Observable Rules:** The logic is expressed in clear, auditable rules.
-  - **GOOD:** `IF (face_match_confidence > 0.8) AND (is_only_candidate) THEN auto_merge`.
-  - **BAD:** `score = (0.4 * reid_score) + (0.3 * time_factor) + (0.3 * spatial_factor)`.
-- **Why:** Weighted formulas are difficult to tune and impossible to debug. When a merge based on a composite score fails, it's unclear which component was at fault. In contrast, an evidence-counting system allows for precise analysis: "The merge was rejected because it only had 'weak timing evidence' and lacked any 'strong evidence' like a face match."
-- **Thresholds, Not Formulas:** The system will use simple, clear thresholds based on the *number* of strong or weak evidence types available for a given merge candidate.
+**Why:** You can't debug weights. You CAN debug "why did face match fail?"
 
----
+### 5. Human-in-Loop Initially, Automation via Learning
+**Trust is earned.**
+- Start with human validation (build ground truth)
+- System learns from corrections
+- Gradually increase automation as confidence builds
 
-## 4. Configuration Over Blind Learning
-**Principle:** Leverage the user's ground-truth knowledge of the environment instead of attempting to discover it from scratch.
+**Why:** Mistakes early are costly (wrong merge breaks timeline). Humans teach the system what "same person" looks like.
 
-- The user knows where doors, gates, and paths are. This information should be manually configured as `Portals` in the system.
-- The system's learning task is to determine the *properties* of these configured paths (e.g., "how long does it take to walk from the driveway to the front door?"), not to statistically infer that a path exists in the first place.
-- This approach is more efficient and far less error-prone than trying to have the system discover the fundamental layout of the property through unsupervised learning.
+### 6. Acceptable Errors
+**Not all mistakes matter equally.**
+- Low impact: "Person in garage" vs "Person in car in garage" → both "inside," self-corrects when person emerges
+- High impact: "Person A merged with Person B" → timeline broken, needs correction
 
----
+**Why:** Over-engineering low-impact edge cases wastes time. Focus precision where it matters.
 
-## 5. Human-in-the-Loop as the Foundation for Automation
-**Principle:** Trust in automation must be earned through a gradual, human-supervised process.
+### 7. Learn from Clean Data
+**Garbage in, garbage out.** The system's learned knowledge, especially inter-camera travel times, is only as good as the data it learns from.
+- A group of three people walking through a door will have a different travel time than a single person.
+- An ambiguous merge that was incorrectly resolved should not pollute the timing data.
 
-- The system will initially rely on a human operator to validate all ambiguous merge decisions.
-- These human-validated decisions serve two purposes:
-  1. They provide the immediate ground truth for correcting the agent timeline.
-  2. They create a high-quality training dataset for the system's learning components (Face Recognition, Re-ID, and `6x6` grid timings).
-- Automation will be phased in gradually, starting with the most high-confidence scenarios (e.g., definitive face matches) and slowly expanding as the system's accuracy is proven against the human operator's decisions. This ensures that early mistakes do not break the timeline and undermine user trust.
+**Principle:** Only update core system knowledge (like the `6x6` grid timings) from high-confidence, unambiguous, single-agent observations. Merges involving groups or uncertainty are still valuable for tracking agents, but they are excluded from the learning process.
+
+**Why:** This prevents the system's core understanding of the environment from being skewed by outliers or ambiguous situations, leading to more reliable merge decisions over time.
