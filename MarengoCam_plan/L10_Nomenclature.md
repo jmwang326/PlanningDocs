@@ -137,12 +137,13 @@ if min_travel_time == 0:
 
 **Behavior:**
 - Acquisition: 10 FPS (sub profile only)
-- Inference: Sparse (~10% sampling after motion gate)
-- Frame persistence: No (pre-roll ring buffer only)
+- Inference: Sparse (motion gate filters, then minimal YOLO sampling)
+- Frame persistence: No (frames kept in 25s processing buffer only, not saved to disk)
 - Main profile: Not captured
+- Sampling rate: Determined by Inference Manager based on GPU budget
 
 **Transitions:**
-- → Armed: Motion detected or neighbor Active
+- → Armed: Motion detected (via motion gate + sparse YOLO)
 - ← Post: Post-roll expires without new activity
 
 **Always write as:** "Standby" (capitalized)
@@ -152,17 +153,17 @@ if min_travel_time == 0:
 ---
 
 ### Armed
-**Definition:** Recent activity or neighbor camera is Active.
+**Definition:** Recent activity detected, agent not yet confirmed.
 
 **Behavior:**
 - Acquisition: 10 FPS (sub profile)
-- Inference: Medium (~60% sampling)
-- Frame persistence: Yes (all sub frames saved)
+- Inference: Moderate (increased sampling to confirm sustained track)
+- Frame persistence: Yes (all sub frames saved to disk)
 - Main profile: Not captured
+- Sampling rate: Determined by Inference Manager based on GPU budget
 
-**Triggers:**
-- Neighbor boost (adjacent camera Active via learned 8×8 edges)
-- Recent detection (single high-confidence or motion spike)
+**Trigger:**
+- Detection appeared via Standby motion gate + sparse YOLO sampling
 
 **Transitions:**
 - → Active: Agent confirmed (≥3s sustained movement)
@@ -181,7 +182,7 @@ if min_travel_time == 0:
 
 **Behavior:**
 - Acquisition: 10 FPS (sub + main profiles)
-- Inference: High (handled by tracker)
+- Inference: Full (all frames processed by YOLO)
 - Frame persistence: Yes (all sub + main frames saved)
 - Main profile: Captured for Active cameras
 
@@ -199,9 +200,10 @@ if min_travel_time == 0:
 
 **Behavior:**
 - Acquisition: 10 FPS (sub profile only)
-- Inference: Medium (~40% sampling)
+- Inference: Moderate (watching for re-entry)
 - Frame persistence: Yes (all sub frames saved)
 - Duration: post_roll_s (10-15 seconds, TBD)
+- Sampling rate: Determined by Inference Manager based on GPU budget
 
 **Purpose:** Capture post-event context, allow re-activation if agent returns.
 

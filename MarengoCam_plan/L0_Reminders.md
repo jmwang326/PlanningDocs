@@ -7,13 +7,6 @@ This file captures topics that need attention to prevent orphaning important iss
 
 ## Active Reminders
 
-### L3_VideoIngestor.md - Stale RTSP Section
-**Context:** File contains outdated RTSP streaming description (lines 58-83) contradicting Blue Iris JPEG acquisition model used elsewhere.
-
-**Status:** Identified, not yet cleaned up
-
----
-
 ### L12 vs L13 Boundary
 **Context:** L12_Merging.md contains detailed pseudocode. Unclear if this belongs in L12 (architecture/specs) or should move to L13 (implementation detail).
 
@@ -22,6 +15,21 @@ This file captures topics that need attention to prevent orphaning important iss
 ---
 
 ## Resolved
+
+### L3 Acquisition & Detection Coherence (2025-01-13)
+**Issues:**
+1. Conflicting 7-10s pre-roll buffer vs 25s processing buffer
+2. Chicken-and-egg: sparse 10% YOLO sampling in Standby might miss detections
+3. Neighbor boost complexity (adjacency tracking via 8x8 grid)
+4. Confusing chunk overlap math
+
+**Resolution:**
+1. Removed pre-roll buffer (stale - not needed for large property with fast detection)
+2. Clarified motion gate runs BEFORE sparse YOLO (all frames → motion gate → if motion → sparse YOLO 10%)
+3. Removed neighbor boost entirely (stale - all cameras polled continuously, each detects independently)
+4. Fixed chunk math explanation (12s chunk with 2s overlap, extracted every 10s)
+
+**Key insight:** All cameras polled at 10 FPS constantly. Camera states (Standby/Armed/Active/Post) control inference rate and frame persistence, not acquisition.
 
 ### Agent State Definitions (2025-01-13)
 **Issue:** Inconsistent state definitions across L2, L10, L12 (person/vehicle states varied, `parked` vs `visible_parked`, missing `exited`, unclear `offscreen` vs `unknown`)

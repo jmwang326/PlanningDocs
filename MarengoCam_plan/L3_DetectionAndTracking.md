@@ -13,12 +13,21 @@ How we detect objects and track them within cameras.
 
 ### When to Run Detection
 **Adaptive inference rate by camera state:**
-- Standby: sparse sampling (~10% of frames)
-- Armed: medium sampling (~60%)
-- Active: all frames (100%)
-- Post: medium sampling
+- Standby: sparse (motion gate filters, then minimal YOLO sampling)
+- Armed: moderate (increased sampling to confirm sustained track)
+- Active: all frames (full YOLO tracking)
+- Post: moderate (reduced but still watching for re-entry)
 
-**Why adaptive:** GPU budget limited, prioritize Active cameras
+**Motion gate (Standby only):**
+- Fast pixel-diff check before YOLO inference
+- Filters static frames (no motion = no inference)
+- Allows Standby→Armed promotion without full YOLO on every frame
+- Only frames with motion delta above threshold proceed to sparse YOLO sampling
+
+**Sampling rate determination:**
+- Inference Manager determines actual frame sampling rates based on GPU budget
+- Prioritizes Active cameras, allocates remaining capacity to Armed/Post, minimal to Standby
+- Exact percentages are dynamic (L11_InferenceManager implementation detail)
 
 ## Tracking (Intra-Camera)
 
@@ -65,12 +74,12 @@ How we detect objects and track them within cameras.
 **Cameras transition based on detected activity:**
 
 **Standby → Armed:**
-- Trigger: detection appears
-- Behavior: increase inference rate, begin saving frames
+- Trigger: detection appears (via motion gate + sparse YOLO sampling)
+- Behavior: increase inference rate to moderate, begin saving frames to disk
 
 **Armed → Active:**
 - Trigger: track sustained (duration threshold met)
-- Behavior: 100% inference, save all frames (sub + main)
+- Behavior: full inference (all frames), save all frames (sub + main)
 
 **Active → Post:**
 - Trigger: no detections for quiet period
@@ -78,13 +87,9 @@ How we detect objects and track them within cameras.
 
 **Post → Standby:**
 - Trigger: post-roll period expires
-- Behavior: return to sparse sampling, ring buffer only
+- Behavior: return to sparse sampling, 25s buffer only (no persistence)
 
-### Neighbor Boost
-**Adjacent cameras elevate when neighbor Active:**
-- Camera A goes Active → Cameras B, C promote to Armed
-- Adjacency defined by portal configuration
-- Increases chance of catching agent transition
+**Note:** All cameras polled continuously at 10 FPS. Camera states control inference rate and frame persistence, not acquisition. Each camera independently detects agents via its own motion gate + YOLO sampling.
 
 ## Related Documents
 - **L2 (Strategy):** Why this approach filters noise
