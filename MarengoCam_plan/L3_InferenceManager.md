@@ -28,7 +28,7 @@ The **Inference Manager** is the central nervous system for all AI-related tasks
 
 3.  **Routing:** The Inference Manager consults its registry. It identifies all healthy providers that have the `detection` capability, sorts them by priority, and selects the top one.
 
-4.  **Execution & Failover:** It dispatches the request to the selected provider (e.g., a local YOLOv8 instance).
+4.  **Execution & Failover:** It dispatches the request to the selected provider (e.g., a local YOLO11 instance).
     - If the request is successful, the result is returned to the caller.
     - If the request fails (timeout, error code), the manager logs the failure, updates the health status for that provider (incrementing the failure count for the circuit breaker), and immediately attempts the request again with the next-highest-priority provider.
 

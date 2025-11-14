@@ -11,7 +11,7 @@ This document provides the technical specification for the bootstrapping tools a
 - **Functionality:**
     - Iterates through each video file.
     - Uses a library like `OpenCV` to read frames.
-    - Processes each frame with the standard YOLOv8 detection and tracking model.
+    - Processes each frame with the standard YOLO11 detection and tracking model.
     - For each track identified by the tracker, it creates a `track` record.
     - **Output:** A set of CSV files or a temporary SQLite database containing all raw `track` and `detection` data for the entire historical period. This data is NOT yet in the main `marengo.db`.
 
