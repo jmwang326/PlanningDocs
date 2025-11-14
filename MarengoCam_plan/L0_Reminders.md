@@ -103,13 +103,47 @@ This file captures topics that need attention to prevent orphaning important iss
 - L4 references L14 for implementation: "See L14_ReviewUI.py for implementation"
 - L4 does NOT reference L13 (per user guidance)
 
-**Planned L4 files:**
-- L4_IDPanel.md - Identity comparison panel specification
-- L4_ReviewQueue.md - Review queue priority and display
-- L4_Timeline.md - Timeline viewer specification
-- L4_HealthDashboard.md - System health dashboard
-- L4_ConfigurationUI.md - Configuration tool UI
+**Created L4 files:**
+- L4_ReviewPanel.md - Identity comparison panel specification ✅
+- L4_ReviewQueue.md - Review queue priority and display ✅
+- L4_HealthDashboard.md - System health dashboard ✅
 
-**Status:** Structure defined, files pending creation
+**Planned L4 files (extracted from L3):**
+- L4_GridLearning.md - 6×6 grid learning concept (from L3_IdentityResolution)
+- L4_AlibiCheck.md - Alibi check concept (from L3_IdentityResolution)
+- L4_PortalTransitions.md - Portal handling concept (from L3_Configuration, L3_IdentityResolution)
+- L4_VehicleOccupancy.md - Vehicle occupancy tracking (from L12_VehicleOccupancy)
+- L4_Timeline.md - Timeline viewer specification
+- L4_ConfigurationUI.md - Configuration tool UI
+- L4_FaceLibrary.md - Face library manager
+
+**Status:** 3 files created, 7 planned for extraction
+
+---
+
+### File Structure Cleanup (2025-11-14)
+**Issue:** Root directory has many files; need to organize D-files, old L-files, and extract L4 concepts.
+
+**D-files (Discourse/Decision rationale):**
+- L1D_Mission.md - Mission rationale ("Why agent-centric?", "Why observable evidence?")
+- L2D_Strategy.md - Strategy rationale ("Why evidence hierarchy?", "Why accept uncertainty?")
+- L3D_Database.md - Decision: No L3_Database needed (passive repository)
+- L3D_InferenceManager.md - (need to check)
+- L3D_Merging.md - (need to check)
+
+**Plan:** Move all D-files to `decisions/` subdirectory (already exists)
+
+**Old L-files to archive:**
+- L2_Strategy_Principles.md - Superseded by L2_Strategy.md
+- L13 files superseded by L3 restructure (move to _archive)
+- L15_Bootstrap.md - Rename to L5 (follows convention)
+
+**L4 extraction candidates (from L3):**
+- Grid learning details (currently in L3_IdentityResolution)
+- Alibi check logic (currently in L3_IdentityResolution)
+- Portal transition handling (currently in L3_Configuration + L3_IdentityResolution)
+- Vehicle occupancy (currently in L12_VehicleOccupancy, should be L4)
+
+**Status:** Pending user approval
 
 ---
