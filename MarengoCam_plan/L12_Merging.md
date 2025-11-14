@@ -23,66 +23,77 @@ def find_merge_candidates():
 - Spatial: distance / time_delta within walking speed (~1 m/s)
 - Portal check: track endpoints near portal locations
 
-### Evidence Scoring (with Grid)
-**Hierarchy with grid overlap detection:**
+### Evidence Scoring (Grid-Driven Hierarchy)
+
+**Core insight:** Grid learned from validated merges → enables deterministic merging of new tracks
+
 ```python
 def evaluate_merge_candidate(track1, track2):
     """
-    Evidence hierarchy incorporating grid overlap
+    Evidence hierarchy: face → grid overlap → grid transition → LLM → reject
     """
     # 1. Face recognition (definitive)
     if face_match(track1, track2) > 0.75:
         return AUTO_MERGE, "face_match"
 
-    # 2. Grid overlap + single agent (auto-merge)
+    # 2. GRID OVERLAP (fastest auto-merge)
+    # Both tracks in same cell (or adjacent) with travel_time < 1.0s?
+    # → Same camera can see both objects = same agent
+
     grid_stats = get_grid_transition_stats(
-        track1.camera, track1.end_cell,
-        track2.camera, track2.start_cell
+        track1.camera, track1.exit_cell,    # Where person left camera 1
+        track2.camera, track2.entry_cell    # Where person entered camera 2
     )
 
-    if grid_stats and grid_stats.is_overlap():  # typical_time < 1.0
-        # Check type compatibility
-        if track1.agent_type != track2.agent_type:
-            return REJECT, "type_mismatch"
+    if grid_stats and grid_stats.travel_time < 1.0:  # OVERLAP ZONE
+        # No time gap → cameras see same physical space
+        # But: multiple people might be in that space
 
-        # Check person-in-vehicle exemption
-        if track1.agent_type == "person" and track1.agent.state == "in_vehicle":
-            return REJECT, "person_in_vehicle_exemption"
+        # Count agents of same type visible in these cells at these times
+        agents_at_exit = count_agents(track1.camera, track1.exit_cell, track1.end_time)
+        agents_at_entry = count_agents(track2.camera, track2.entry_cell, track2.start_time)
 
-        # Count agents of same type in overlap zones
-        agents_zone1 = count_agents_in_zone(track1.camera, track1.end_cell, track1.end_time)
-        agents_zone2 = count_agents_in_zone(track2.camera, track2.start_cell, track2.start_time)
-
-        if agents_zone1 == 1 and agents_zone2 == 1:
-            # Single agent in overlap → must be same
-            return AUTO_MERGE, "grid_overlap_single"
+        if agents_at_exit == 1 and agents_at_entry == 1:
+            # Only one person visible in exit cell AND only one in entry cell
+            # They must be the same person
+            return AUTO_MERGE, "grid_overlap_single_agent"
         else:
-            # Multi-agent overlap → constrained multi-assignment
-            return MULTI_ASSIGN_OVERLAP, "grid_overlap_multi"
+            # Multiple people in overlap zone → ambiguous
+            return MULTI_ASSIGN_OVERLAP, "grid_overlap_ambiguous"
 
-    # 3. Grid portal + time/space gating
-    if grid_stats and grid_stats.is_portal():  # 1.0 <= typical_time <= 15.0
-        time_delta = track2.start_time - track1.end_time
+    # 3. GRID TRANSITION (plausible but needs other evidence)
+    # Learned travel time: 5 seconds typical. Observed: 4.8 seconds.
+    # → Plausible path, continue with secondary evidence
 
-        # Check time fits typical ± margin
-        margin = max(2.0, grid_stats.variance * 2)  # At least 2s margin
-        if abs(time_delta - grid_stats.typical_time) > margin:
-            return REJECT, "time_mismatch_portal"
+    if grid_stats and grid_stats.travel_time > 1.0:
+        travel_time_observed = track2.start_time - track1.end_time
+        margin = max(2.0, grid_stats.variance * 2)  # Conservative margin
 
-        # Portal candidate → continue to LLM/human
-        return REVIEW_LLM, "portal_candidate"
+        if abs(travel_time_observed - grid_stats.travel_time) <= margin:
+            # Time fits learned transition
+            return REVIEW_LLM, "grid_transition_plausible"
+        else:
+            # Time doesn't match learned paths
+            return REJECT, "grid_transition_timing_mismatch"
 
-    # 4. No grid data
+    # 4. NO GRID DATA (unlearned path or first observation)
     if not grid_stats:
-        # Fall back to manual portal config
+        # Try manual portal configuration
         if manual_portal_exists(track1.camera, track2.camera):
-            return REVIEW_LLM, "manual_portal"
+            return REVIEW_LLM, "manual_portal_unlearned"
         else:
-            return REJECT, "no_adjacency"
+            # No evidence: learned grid, manual portal, or face
+            return REJECT, "no_adjacency_evidence"
 
-    # 5. Default: reject
-    return REJECT, "no_evidence"
+    # 5. Default: insufficient evidence
+    return REJECT, "no_merge_evidence"
 ```
+
+**Key decision points:**
+- **Grid < 1.0s + single agent in each zone** = instant auto-merge (temporal and spatial determinism)
+- **Grid learned + time fits** = plausible, needs LLM/face for confidence
+- **Grid not learned** = need manual portal or high face confidence
+- **Multiple agents in overlap** = mark as ambiguous, let later evidence resolve
 
 ## Face Recognition
 

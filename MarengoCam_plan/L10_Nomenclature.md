@@ -130,15 +130,55 @@ detection.cell_6x6 = (3, 4)  # Row, col in 6x6 inter-camera grid
 - **Unlearned:** A value of `-1` (or `MAX_INT`) represents an unlearned path.
 
 ### Entry Cell
-**Purpose:** To define the specific grid cell where a track segment first appears on a camera. This serves as the destination point in a cross-camera transition.
-**TBD:** The precise logic for determining the entry cell (e.g., first detection, or first stable detection) needs to be defined.
+**Purpose:** Define the 6x6 grid cell where a track segment first enters a camera frame. Used as destination point when computing travel time from prior camera.
+
+**Logic:**
+```
+entry_cell = 6x6_grid_position(detections[0].bbox_center)
+```
+Simply the 6x6 cell containing the center of the first detection's bounding box. No filtering or averaging.
+
+---
 
 ### Exit Cell
-**Purpose:** To define the specific grid cell where a track segment last appears on a camera before disappearing. This serves as the source point for a cross-camera transition.
-**TBD:** The precise logic for determining the exit cell (e.g., last detection) needs to be defined.
+**Purpose:** Define the 6x6 grid cell where a track segment last exits a camera frame. Used as source point when computing travel time to next camera.
+
+**Logic:**
+```
+exit_cell = 6x6_grid_position(detections[-1].bbox_center)
+```
+Simply the 6x6 cell containing the center of the last detection's bounding box. No filtering or averaging.
+
+**Why simple boundary logic:**
+- Deterministic: no tuning or thresholds
+- Works with tracks of any length
+- Edge noise handled by grid learning filters (see below)
+
+---
+
+### Grid Learning & Overlap Detection
+
+**How the grid learns:**
+1. Two tracks merge (human-validated or high-confidence auto-merge)
+2. Compute: `travel_time = track2.start_time - track1.end_time`
+3. Look up grid entry: `(track1.camera, track1.exit_cell) → (track2.camera, track2.entry_cell)`
+4. Update grid: `grid[exit_cell, entry_cell] = min(grid[exit_cell, entry_cell], travel_time)`
+
+**Overlap zones:**
+- If `travel_time < 1.0 second`: cameras can see overlapping areas
+- Mark grid cell with 0 (or observed min time if <1s)
+- Future merges: if both tracks land in overlap cells with `time ≈ 0`, auto-merge immediately (single agent in overlap zone)
+
+**Edge noise filtering:**
+- Boundary detections (first/last frame) may be low-confidence or jittery
+- Solution: **only learn from high-quality validated merges** (see L2_Strategy_Principles: "Learn from Clean Data")
+- Exclude multi-agent groups, ambiguous merges from grid updates
+- Grid naturally filters noise through validation gate
 
 **Learning:**
-- The grid is populated and refined over time by recording the time deltas from high-confidence, validated merges. The system always stores the *lowest* observed time.
+- Populated over time by recording time deltas from validated merges
+- Always stores the *lowest* observed travel time (fastest observed path)
+- Builds bidirectional grid: separate entries for each camera-pair direction
 
 **Usage Examples:**
 ```python

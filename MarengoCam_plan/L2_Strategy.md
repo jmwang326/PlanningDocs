@@ -44,21 +44,37 @@ Non-technical description of **what** we're doing and **why** this approach solv
 - System operates with partial timeline
 - Don't force wrong merge to avoid uncertainty
 
-### Grid-Based Spatial Learning & Portals
-**What:** We use a combination of automated grid learning and manual configuration to understand how agents move between cameras and into occluded spaces. This relies on distinguishing two types of "portals".
-**Why:** This hybrid approach uses automation for discovering visible pathways and manual setup for defining semantically important zones that the system cannot infer on its own.
+### Grid-Based Spatial Learning & Overlap Detection
 
-**Approach:**
-- **Transitional Portals (Learned):** These are connections where an agent moves between two *visible* camera views. The `6x6` inter-camera grid automatically learns the typical travel times for these transitions from validated merges.
-  - Overlap zones (typical_time ≈ 0) are a special case of transitional portals, enabling high-confidence auto-merges.
-  - Standard transitions (typical_time > 0) are used as evidence for plausible merges.
+**What:** Automatic learning of minimum travel times between camera pairs at the 6x6 grid level to enable fast, deterministic track merging.
 
-- **Terminal Portals (Configured):** These are user-defined zones where an agent can legitimately enter an *occluded* space (e.g., a house door, garage door).
-  - The system cannot learn these automatically. The user must define their location.
-  - When an agent's track ends in a terminal portal, the `TrackStateManager` transitions the agent to a non-visible state like `in_structure(garage)` or `in_vehicle(V)`.
-  - Travel time is not the primary factor for these portals; the key is the event of crossing the defined boundary.
+**How it works:**
+1. **Observation:** Person walks from Camera A to Camera B (validated merge)
+2. **Measurement:** Record `travel_time = track_B.start_time - track_A.end_time`
+3. **Mapping:** Map to grid cells: "exited Camera A at cell (5,2), entered Camera B at cell (0,3), took 1.5 seconds"
+4. **Learning:** Store `grid[A→B][(5,2)→(0,3)] = 1.5 seconds` (keep minimum observed time)
+5. **Future merging:** See similar exit/entry cells? Recognize it as plausible transition
 
-- **Combined Power:** The grid handles the complex task of learning all visible pathways, while manual configuration provides the critical ground-truth for where agents can disappear from view.
+**Overlap zones (fastest merging):**
+- If travel_time < 1.0 second: cameras can see overlapping areas
+- Grid cell marked as overlap (time ≈ 0)
+- Future tracks in same overlap cells with time ≈ 0 → **instant auto-merge** (must be same agent)
+- Key insight: **no time gap = same space = same agent (if only one agent visible)**
+
+**Edge noise handling:**
+- Grid learns only from **high-quality, validated merges** (single agent, high confidence)
+- Excludes groups (multiple people together) and ambiguous cases
+- This filters out boundary detection noise automatically
+
+**Manual portals (for occluded spaces):**
+- Terminal portals: doors, gates where agents enter buildings/vehicles
+- User defines these in configuration (system cannot learn them from video)
+- When track ends at configured portal: `in_structure` or `in_vehicle` state
+- Travel time doesn't apply; crossing the boundary is what matters
+
+**Combined power:**
+- Grid = automatic discovery of visible pathways (fast, data-driven)
+- Manual portals = semantic knowledge of where agents can hide (required for timeline reconstruction)
 
 ### Learn from Corrections
 **What:** Human/LLM validations improve future decisions
