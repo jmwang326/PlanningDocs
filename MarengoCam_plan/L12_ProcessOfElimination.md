@@ -422,6 +422,7 @@ Process of elimination is **NOT** the only decision mechanism. It works together
 
 ## 7. Related Documents
 
+- **L12_TrackAgentRelationship.md**: How tracks map to agents (core model for understanding assignments)
 - **L2_Strategy.md**: High-level strategy for using constraints and process of elimination
 - **L12_Merging.md**: Implementation of merge evaluation with alibi checking and portal-based merging
 - **L12_VehicleOccupancy.md**: Application of process of elimination to vehicle entry/exit disambiguation
