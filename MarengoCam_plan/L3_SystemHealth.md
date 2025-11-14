@@ -190,7 +190,7 @@ avg_query_time = sum(query_times) / count(queries)
    - Critical issues
    - Recent alerts history
 
-**See:** L3_Gui.md for dashboard UI
+**See:** L4_HealthDashboard.md for dashboard specification
 
 ---
 
@@ -329,12 +329,15 @@ if chunk_processor_time > 5s:
 ### Architecture
 - **L2_DecisionArchitecture.md** - SystemHealth overview
 
-### Other Components
+### Other L3 Components
 - **L3_ChunkProcessing.md** - Processing lag source
 - **L3_IdentityResolution.md** - Merge queue, auto-merge rate
 - **L3_EvidenceProcessing.md** - Review queue
-- **L3_Gui.md** - Health dashboard UI
+- **L3_Gui.md** - GUI overview
 - **L3_Configuration.md** - Alert configuration
+
+### L4 Concepts
+- **L4_HealthDashboard.md** - System health dashboard specification
 
 ### Implementation
 - **L13_InferenceManager.md** - GPU scheduling, adaptive sampling

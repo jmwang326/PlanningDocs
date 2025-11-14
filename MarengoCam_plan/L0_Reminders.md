@@ -75,31 +75,41 @@ This file captures topics that need attention to prevent orphaning important iss
 
 ---
 
-### L3 Restructure to Match 7 Components (2025-11-14)
+### L3 Restructure to Match 7 Components (COMPLETED 2025-11-14)
 **Issue:** L3 tactical docs should match the 7 components from L2_DecisionArchitecture exactly.
 
-**Target structure (7 L3 files, ~100 lines each):**
-1. L3_ChunkProcessing.md - ChunkProcessor tactics (filtering, motion gate, ≥3s threshold)
-2. L3_TemporalLinking.md - TemporalLinker tactics (overlap zone, appearance similarity)
-3. L3_IdentityResolution.md - IdentityResolver tactics (evidence hierarchy, grid learning, alibi checks, process of elimination) - **may be ~150-200 lines (dense but acceptable)**
-4. L3_EvidenceProcessing.md - EvidenceProcessor tactics (uncertainty resolution, cascading updates)
-5. L3_Gui.md - Timeline viewer, review queue (exists)
-6. L3_Configuration.md - Portal config, thresholds (exists)
-7. L3_SystemHealth.md - Performance monitoring (NEW)
+**Target structure (7 L3 files):**
+1. L3_ChunkProcessing.md - ChunkProcessor tactics (203 lines) ✅
+2. L3_TemporalLinking.md - TemporalLinker tactics (219 lines) ✅
+3. L3_IdentityResolution.md - IdentityResolver tactics (360 lines, dense) ✅
+4. L3_EvidenceProcessing.md - EvidenceProcessor tactics (354 lines, dense) ✅
+5. L3_Gui.md - Timeline viewer, review queue (needs expansion) ⚠️
+6. L3_Configuration.md - Portal config, thresholds (needs expansion) ⚠️
+7. L3_SystemHealth.md - Performance monitoring (342 lines) ✅
 
-**Files to consolidate/move:**
-- L3_DetectionAndTracking.md → split to L3_ChunkProcessing + L3_TemporalLinking
-- L3_TrackMerging.md → rename to L3_IdentityResolution.md
-- L3_EvidenceEngine.md → merge into L3_IdentityResolution or L3_EvidenceProcessing
-- L3_HumanInTheLoop.md → merge into L3_EvidenceProcessing
-- L3_InferenceManager.md, L3_VideoIngestor.md, L3_PanelAssemblyService.md, L3_TimelineReconstruction.md, L3_TrackStateManager.md → move to L13 or _archive
+**Archived files:** All old L3 and backup files moved to _archive/
 
-**Detailed algorithms push to L12:**
-- L12_GridLearning.md (if L3_IdentityResolution gets too long)
-- L12_AlibiCheck.md
-- L12_ProcessOfElimination.md (already exists)
-- L12_Merging.md (already exists)
+**Status:** Core L3 files created, L3_Gui and L3_Configuration need expansion
 
-**Status:** L2 streamlined (complete), L3 restructure pending
+---
+
+### L4 Concept Library Structure (2025-11-14)
+**Purpose:** L4 files provide detailed concept specifications that L3 references. L3 says "make an ID panel", L4 details what that means in words.
+
+**Naming convention:** By feature - `L4_FeatureName.md`
+
+**Cross-references:**
+- L3 references L4 concepts: "See L4_IDPanel.md for detailed specification"
+- L4 references L14 for implementation: "See L14_ReviewUI.py for implementation"
+- L4 does NOT reference L13 (per user guidance)
+
+**Planned L4 files:**
+- L4_IDPanel.md - Identity comparison panel specification
+- L4_ReviewQueue.md - Review queue priority and display
+- L4_Timeline.md - Timeline viewer specification
+- L4_HealthDashboard.md - System health dashboard
+- L4_ConfigurationUI.md - Configuration tool UI
+
+**Status:** Structure defined, files pending creation
 
 ---

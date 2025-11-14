@@ -62,7 +62,7 @@ Tactical guide for resolving uncertain tracks when evidence arrives. This handle
 - If decision == "reject" → remove from identity_candidates
 - If decision == "uncertain" → leave in identity_candidates
 
-**See:** L3_Gui.md for review panel generation
+**See:** L4_ReviewPanel.md for review panel specification
 
 ---
 
@@ -84,7 +84,7 @@ Tactical guide for resolving uncertain tracks when evidence arrives. This handle
 - If decision == "reject" → remove from identity_candidates
 - If decision == "new_agent" → create new global_agent_id
 
-**See:** L3_Gui.md for review queue UI
+**See:** L4_ReviewQueue.md for review queue specification
 
 ---
 
@@ -254,7 +254,7 @@ def calculate_priority(track):
 }
 ```
 
-**See:** L3_Gui.md for review panel UI
+**See:** L4_ReviewPanel.md for detailed specification
 
 ---
 
@@ -348,7 +348,11 @@ timeline_A = db.query(LocalTrack).filter(
 ### Previous Handler
 - **L3_IdentityResolution.md** - Creates uncertain tracks (identity_candidates)
 
+### L4 Concepts
+- **L4_ReviewPanel.md** - Identity comparison panel specification
+- **L4_ReviewQueue.md** - Review queue priority and display
+
 ### Implementation
 - **L12_ProcessOfElimination.md** - Cascading elimination logic
 - **L13_FaceRecognition.md** - CodeProject.AI integration, face library
-- **L3_Gui.md** - Review queue, comparison panels
+- **L3_Gui.md** - GUI overview
