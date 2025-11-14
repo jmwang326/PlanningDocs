@@ -30,6 +30,21 @@ This file captures topics that need attention to prevent orphaning important iss
 
 ---
 
+### Track-Centric Model: Standby/Armed Track Initiation (NEEDS SPEC 2025-11-14)
+**Issue:** With track-centric architecture (LocalTrack as fundamental unit), need to clarify how tracks start from Standby/Armed states.
+
+**Questions:**
+- How does motion gate trigger relate to LocalTrack creation?
+- Is "candidate track" an implementation detail or part of LocalTrack lifecycle?
+- When does ChunkProcessor create a LocalTrack vs discard detections?
+- How does ≥3s movement threshold fit with 12s chunks?
+
+**Status:** Reminder to spec this out in L3_ChunkProcessing or L13_Detection after core architecture stabilizes
+
+**Related:** L2_DecisionArchitecture (ChunkProcessor), L10_Nomenclature (deprecated "Candidate Track")
+
+---
+
 ### L12 vs L13 Boundary
 **Context:** L12_Merging.md contains detailed pseudocode. Unclear if this belongs in L12 (architecture/specs) or should move to L13 (implementation detail).
 
