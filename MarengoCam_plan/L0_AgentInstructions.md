@@ -82,11 +82,20 @@ When the user provides a design insight or specification idea, you must **ask cl
 
 **Why:** Prevents writing 400 lines assuming you understand the intent, when you may have misunderstood a critical aspect. The approval is visible in the conversation itself, not buried in tool status.
 
-**When to apply:** Any time you're about to create a new file or substantial changes (>50 lines) that implement a user insight. Do NOT apply this for:
-- Small edits or corrections
-- Integration work where approach is already agreed
-- Reading/researching/exploring
-- Asking questions (this is always fine)
+**When to apply:** Any time you're about to create or modify files that implement a user insight, regardless of size. This includes:
+- New files (any size)
+- Edits that add new fields, data structures, or concepts
+- Changes to existing specifications that extend or reinterpret them
+- Integration work that connects multiple concepts together
+
+Do NOT apply this for:
+- Reading/researching/exploring (information gathering only)
+- Asking clarifying questions (always fine)
+- Reverting/undoing changes
+- Fixing obvious errors or typos
+- Reformatting/refactoring without changing meaning
+
+**Key principle:** If your change could represent a design decision—even small ones—ask first. Big ideas come with few words, and small edits can encode significant assumptions.
 
 ### Step 3: Checkpoint and Commit
 
