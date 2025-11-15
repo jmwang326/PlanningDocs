@@ -7,27 +7,27 @@ This document provides instructions for AI agents working with the MarengoCam pl
 
 ### Level Structure
 
-**Strategic Levels (L1-L9):**
+**Strategic Levels (L0-L6):**
 - **Level 0**: This document - meta-instructions for agents (evolves continuously)
 - **Level 1**: Mission and philosophy (core problem, values, goals)
-- **Level 2**: Strategy (what and why, non-technical approach)
-- **Level 3**: Tactics (how and when, non-technical, component-specific)
-- **Level 4**: Complexity and risks (what's hard, tuning-dependent, failure modes)
-- **Level 5**: TBD (open for future strategic topics)
-- **Level 6**: Deployment plan (phased rollout, timelines, success criteria)
+- **Level 2**: Architecture and strategy (components, data structures, what and why)
+- **Level 3**: Tactics (component behavior, how and when)
+- **Level 4**: Concepts (detailed specs for complex ideas referenced by L3)
+- **Level 5**: Bootstrap strategy (concurrent learning workflow)
+- **Level 6**: Deployment plan (phased rollout, gates, risks)
 
-**Reference Levels (L10):**
+**Reference Level (L10):**
 - **Level 10**: Nomenclature (terminology reference, the "dictionary")
 
-**Technical Levels (L11-L19):**
-- **Level 11**: Technical specs corresponding to L1 topics
-- **Level 12**: Technical specs corresponding to L2 topics
-- **Level 13**: Technical specs corresponding to L3 topics
-- **Level 14**: Technical specs corresponding to L4 topics
-- **Level 15**: Technical specs corresponding to L5 topics
-- **Level 16**: Technical specs corresponding to L6 topics
+**Implementation Spec Levels (L13-L14):**
+- **Level 13**: Implementation specs for L3 components (algorithms, detailed behavior)
+- **Level 14**: Implementation specs for L4 concepts (data structures, APIs, schemas)
 
-**Pattern:** L{N} strategic → L{N+10} technical
+**Pattern:** L3 tactical → L13 implementation specs, L4 concepts → L14 implementation specs
+
+**Code:** Lives outside this framework (separate repo/directory)
+
+**Note:** L11, L12, L15+ are not used. We skip directly from strategic planning to implementation specs.
 
 ### Naming Conventions
 - Core documents: `L{N}_{Topic}.md`

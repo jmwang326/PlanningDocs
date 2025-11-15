@@ -112,32 +112,10 @@ def get_agent_timeline(global_agent_id: int) -> List[LocalTrack]:
 
 ---
 
-## Database Schema
+## Database Storage
 
-```sql
-CREATE TABLE local_tracks (
-    id SERIAL PRIMARY KEY,
-    local_id INT NOT NULL,
-    camera_id VARCHAR NOT NULL,
-    chunk_id INT NOT NULL,
-    start_time TIMESTAMP NOT NULL,
-    end_time TIMESTAMP NOT NULL,
-    entry_cell_x INT,
-    entry_cell_y INT,
-    exit_cell_x INT,
-    exit_cell_y INT,
-    previous_track_id INT REFERENCES local_tracks(id),
-    next_track_id INT REFERENCES local_tracks(id),
-    global_agent_id INT,  -- NULL if uncertain
-    identity_candidates INT[],
-    inside_vehicle BOOLEAN DEFAULT FALSE,
-    at_portal VARCHAR,
-    exit_reason VARCHAR,
-    detections JSONB,
-    INDEX (global_agent_id),
-    INDEX (camera_id, chunk_id),
-    INDEX (start_time)
-);
-```
+**One table:** `local_tracks` stores all LocalTrack observations.
 
-**That's it.** One table. No GlobalAgent, no Constraint, no Container tables.
+**Key insight:** No GlobalAgent table, no Constraint table, no Container tables. All state derived from LocalTracks.
+
+**Implementation:** See L13_Database.md for SQL schema.
