@@ -114,85 +114,22 @@ Everything else - timelines, alerts, forensics - is just querying and displaying
 
 ---
 
-## Special Cases
-
-### Concurrent Agents (Same Camera)
-**Strategy:** YOLO maintains separate tracking IDs (different local_ids), so no special handling needed. Exclude groups from grid learning.
-
-**See:** L12_ConcurrentTracking.md for details
-
----
-
-### Vehicle Occupancy *(NEEDS MORE SPEC)*
-**Strategy:** Mark person track with `inside_vehicle` context flag. Use sporadic detections for face matching only. Accept gaps in person timeline (vehicle track becomes proxy).
-
-**See:** L3_VehicleOccupancy.md for detailed strategy (TBD)
-
----
-
-### Structure Entry/Exit *(NEEDS MORE SPEC)*
-**Strategy:** Mark track with `at_portal` context flag. Accept location uncertainty (agent in structure). Use face match or process of elimination to resolve when agent exits.
-
-**See:** L3_StructureEntry.md for detailed strategy (TBD)
-
----
-
-### Property Boundaries *(NEEDS MORE SPEC)*
-**Strategy:** Mark with `property_entry` context flag. Vehicle arriving from street → occupancy uncertain (could have hidden people). Accept uncertainty until people exit vehicle on property.
-
-**See:** L3_PropertyBoundaries.md for detailed strategy (TBD)
-
----
-
-## Core Principles (from L2_Strategy_Principles)
-
-All strategy decisions follow these core principles:
-
-1. **Agent-Centric Thinking** - Tracks belong to agents (people), not cameras
-2. **Observable Evidence Only** - No statistical priors, no routine modeling
-3. **Learn from Data, Then Refine** - Grid learns automatically, config adds semantics
-4. **Count Evidence, Don't Do Arithmetic** - No probability scoring
-5. **Human-in-Loop Initially** - Trust is earned, automation via learning
-6. **Acceptable Errors** - Not all mistakes matter equally
-7. **Learn from Clean Data** - Only high-quality observations train the system
-
-**See:** [L2_Strategy_Principles.md](L2_Strategy_Principles.md) for full details
-
----
-
-## System Lifecycle
-
-The system's lifecycle is defined by:
-1. **Bootstrapping** (see L5_Bootstrap.md) - Initial setup, first data collection
-2. **Phased Deployment** (see L6_Deployment.md) - Progressive feature rollout
-
----
-
 ## Related Documents
 
 ### Architecture
 - **L2_DecisionArchitecture.md** - Technical architecture (7 components)
-- **L2_Strategy_Principles.md** - Core principles guiding all decisions
 
-### Mission & Complexity
-- **L1 (Mission):** Why we're solving this problem
-- **L4 (Complexity):** Where this strategy gets complicated
+### Mission
+- **L1_Mission.md** - Why we're solving this problem
 
-### Tactics & Implementation
+### Tactics
 - **L3_ChunkProcessing.md** - How ChunkProcessor creates tracks (filtering, motion gate, ≥3s threshold)
 - **L3_TemporalLinking.md** - How TemporalLinker connects tracks (overlap zone matching, appearance similarity)
 - **L3_IdentityResolution.md** - How IdentityResolver merges across cameras (grid learning, alibi checks, process of elimination, face recognition)
 - **L3_EvidenceProcessing.md** - How EvidenceProcessor resolves uncertainty (process of elimination, face library, human/LLM review)
-- **L3_VehicleOccupancy.md** - Vehicle association tactics (NEEDS MORE SPEC)
-- **L3_StructureEntry.md** - Structure entry/exit tactics (NEEDS MORE SPEC)
-- **L3_PropertyBoundaries.md** - Property boundary tactics (NEEDS MORE SPEC)
 - **L3_Gui.md** - Timeline viewer, review queue
 - **L3_Configuration.md** - Portal configuration, thresholds
 - **L3_SystemHealth.md** - Performance monitoring
 
-### Technical Specs
-- **L10 (Nomenclature):** Terminology definitions
-- **L12_Merging:** Cross-camera merge algorithm
-- **L12_ProcessOfElimination:** Elimination logic details
-- **L12_ConcurrentTracking:** Multi-agent scenarios on single camera
-- **L13_Detection:** LocalTrack data structure and creation
+### Reference
+- **L10_Nomenclature.md** - Terminology definitions
