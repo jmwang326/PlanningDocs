@@ -145,6 +145,46 @@ Split a level into multiple files when:
 - Help refine and execute, don't override
 - Surface conflicts and inconsistencies proactively
 
+## Writing Style: Clarity and Brevity
+
+**Core principle:** Extra content sends agents down rabbitholes for no reason.
+
+**Do:**
+- Use observable, testable success criteria
+- Write "what must work" not "what we might do"
+- Sequence matters, timelines don't (Phase 0 → Phase 1, not "Week 1-2")
+- Keep files focused and minimal
+
+**Don't:**
+- Make up timelines ("Week 1-2", "Months 3-4")
+- Enumerate vague tools ("configuration viewer", "statistics dashboard")
+- Create metrics tables with fake percentages
+- Add "Related Documents" sections with broken references
+
+**Examples:**
+
+**Good:**
+```
+## Phase 1: Single-Camera Tracking
+**Goal:** LocalTracks work on one camera
+**Success Gate:** Track person across multiple 12s chunks
+```
+
+**Bad:**
+```
+## Phase 1: Single-Camera Tracking (Weeks 3-4)
+**Goal:** Prove intra-camera tracking before cross-camera merging
+**Tasks:** YOLO11 tracking integration, camera state machine, track quality filtering, agent creation
+**Tools:** Single-camera debug viewer, state transition logger
+**Success:** Track person for 60+ seconds, state transitions work
+```
+
+**Why bad:**
+- Timeline is voodoo ("Weeks 3-4")
+- Task list is obvious from goal
+- Tool list doesn't add value
+- Success criteria could be sharper
+
 ## Scope Guidelines by Level
 
 ### Level 1 (Mission)
@@ -159,9 +199,13 @@ Split a level into multiple files when:
 **What belongs:** How components work together, when things happen
 **What doesn't:** Code implementation, database schema
 
+### Level 4 (Concepts)
+**What belongs:** Detailed specs for single concepts (ReviewPanel, GridLearning, AlibiCheck)
+**What doesn't:** Implementation code, cross-cutting concerns
+
 ### Level 6 (Deployment)
-**What belongs:** Phased rollout, timelines, success criteria per phase
-**What doesn't:** Implementation tasks (that's project management)
+**What belongs:** Sequence, gates, risks. Observable success criteria per phase.
+**What doesn't:** Timelines (voodoo), tool lists (obvious), metrics tables (fake data)
 
 ### Level 11-13 (Technical)
 **What belongs:** APIs, data structures, algorithms, schemas, code specs
