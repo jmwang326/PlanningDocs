@@ -189,3 +189,20 @@ if merge_queue_depth > 100:
 - Consistent processing lag (< 15s)
 
 **Goal:** Maintain performance, detect degradation early.
+
+---
+
+## Startup Health Checks
+
+Before the main application loop begins, the system must pass a series of startup health checks to ensure critical dependencies are available.
+
+### Database Connection
+The system is critically dependent on the database for all stateful operations.
+
+**Protocol:**
+1. On startup, the system will attempt to connect to the configured PostgreSQL database.
+2. If the connection fails, it will log the error and enter a retry loop.
+3. It will attempt to reconnect every 5 seconds for a total of 60 seconds.
+4. If a connection cannot be established after 60 seconds, the system will log a fatal error and exit with a non-zero status code.
+
+This prevents the system from running in a broken state where it cannot record or retrieve information.

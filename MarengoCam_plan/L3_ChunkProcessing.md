@@ -84,7 +84,8 @@ LocalTrack(
     previous_track=None,  # Set by TemporalLinker
     next_track=None,
     global_agent_id=None,  # Set by IdentityResolver
-    identity_candidates=set()
+    identity_candidates=set(),
+    decision_record=None  # JSON blob detailing the IdentityResolver's decision and evidence
 )
 ```
 
@@ -101,3 +102,18 @@ LocalTrack(
 **Post → Standby:** Post-roll expires (no new detections)
 
 **Note:** All cameras polled continuously at 10 FPS. States control inference rate and frame persistence.
+
+---
+
+## Portal Association
+
+**Purpose:** Identify when a track originates from or terminates at a known portal, including dynamically identified stationary vehicles.
+
+**Process:**
+1.  **Load Static Portals:** Load fixed portal locations (doors, garages) from `marengo.yaml`.
+2.  **Identify Dynamic Portals:** After chunk processing, identify `vehicle` tracks that have been stationary for a significant duration (e.g., > 10 seconds across one or more chunks). These are treated as temporary "dynamic portals." Their portal ID is derived from their track ID (e.g., `vehicle_123`).
+3.  **Associate Tracks:** For each `LocalTrack` in the chunk:
+    - If the track's first appearance (`entry_cell`) is within the cells of a static or dynamic portal, set `track.at_portal = portal_id`.
+    - If the track's last appearance (`exit_cell`) is within the cells of a portal, update `track.exit_reason = "portal_crossed"`.
+
+**Example:** A `person` track appears next to a car that has been parked for 5 minutes. The `ChunkProcessor` identifies the car as a dynamic portal and sets the new person track's `at_portal` field, providing crucial context for the `IdentityResolver`.

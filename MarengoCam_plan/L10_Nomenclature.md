@@ -210,6 +210,27 @@ else:
 
 ---
 
+## Portals
+
+### Portal
+**What it is:** A spatial zone where a GlobalAgent can transition between an observed state (visible on camera) and an unobserved state. Portals are the logical explanation for tracks that start or end within the frame, rather than at the edge.
+
+**Types:**
+- **Permanent Portal:** A fixed, static portal that is part of the environment's structure.
+- **Temporary Portal:** A transient portal that exists for a limited time.
+
+**Usage:** The `LocalTrack.at_portal` flag is set to the ID of the portal if the track begins or ends at one.
+
+### Permanent Portal
+**Examples:** Doorways, gates, alleys, large bushes.
+**Behavior:** Defined statically in the system configuration or learned over time. They persist indefinitely.
+
+### Temporary Portal
+**Examples:** A stationary vehicle.
+**Behavior:** Created when an object (like a vehicle) becomes stationary and capable of hiding or revealing an agent. It is destroyed when the object moves away. This prevents cluttering the system with expired portals.
+
+---
+
 ## Camera States
 
 ### Standby

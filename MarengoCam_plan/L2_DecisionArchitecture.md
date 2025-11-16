@@ -112,6 +112,16 @@ def get_agent_timeline(global_agent_id: int) -> List[LocalTrack]:
 
 ---
 
+## Agent States (Computed)
+
+While `GlobalAgent` is a query result, its state is computed from the latest `LocalTrack`.
+
+- **PersonAgent States:** `visible`, `in_vehicle`, `in_structure`, `exited`
+- **VehicleAgent States:** `visible_moving`, `visible_parked`, `parked_and_occupied`, `in_structure`, `exited`
+    - `parked_and_occupied`: A vehicle that is stationary and contains occupants. This state is persistent and acts as a "portal" for potential exit events, regardless of time passed.
+
+---
+
 ## Database Storage
 
 **One table:** `local_tracks` stores all LocalTrack observations.

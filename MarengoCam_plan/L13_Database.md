@@ -238,27 +238,48 @@ CREATE INDEX idx_face_validated ON face_crops(validated) WHERE validated = TRUE;
 
 ---
 
-## Merged Tracks Relationship
+## Merged Tracks Table
 
-**NEEDS SPEC:** Decide between:
+**Decision:** Adopt junction table (Option A) to create a permanent audit log of all merge events. This provides the necessary history to allow a human reviewer to understand how a Global Agent was assembled and to identify incorrect merges that may need to be "split".
 
-**Option A: Junction table**
 ```sql
 CREATE TABLE track_merges (
-    track_a_id INT REFERENCES local_tracks(id),
-    track_b_id INT REFERENCES local_tracks(id),
-    merge_confidence VARCHAR,  -- 'face_match' | 'grid_overlap' | 'alibi' | 'human'
-    merged_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    PRIMARY KEY (track_a_id, track_b_id)
+    id SERIAL PRIMARY KEY,
+    merge_timestamp TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+
+    -- The global agent ID that was kept (the destination)
+    retained_agent_id INT NOT NULL,
+
+    -- The global agent ID that was merged into the retained one (and is now retired)
+    consumed_agent_id INT NOT NULL,
+
+    -- Evidence and reasoning for the merge decision
+    reason VARCHAR,  -- e.g., 'face_match', 'grid_overlap', 'alibi', 'human_review'
+    confidence FLOAT,
+
+    -- The source of the decision
+    source VARCHAR, -- e.g., 'TemporalLinker', 'HumanReviewer', 'Bootstrap'
+
+    -- A flag to indicate if a human has later reversed this merge.
+    -- The reversal is a "split" operation, not a true rollback.
+    is_reverted BOOLEAN DEFAULT FALSE
 );
 ```
 
-**Option B: Array in local_tracks**
+**Indexes:**
 ```sql
-ALTER TABLE local_tracks ADD COLUMN merged_track_ids INT[];
+-- Quickly find all merges that formed a given agent
+CREATE INDEX idx_retained_agent_id ON track_merges(retained_agent_id);
+
+-- Quickly find where a consumed agent went
+CREATE INDEX idx_consumed_agent_id ON track_merges(consumed_agent_id);
 ```
 
-**Decision needed:** Which approach for cross-camera track relationships?
+**Usage:**
+- When `Agent B` is merged into `Agent A`:
+  1. `UPDATE local_tracks SET global_agent_id = <Agent_A_ID> WHERE global_agent_id = <Agent_B_ID>;`
+  2. `INSERT INTO track_merges (retained_agent_id, consumed_agent_id, ...) VALUES (<Agent_A_ID>, <Agent_B_ID>, ...);`
+- The GUI can then query this table to build a visual history of an agent's timeline, showing all merge points.
 
 ---
 
