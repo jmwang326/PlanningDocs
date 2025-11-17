@@ -34,3 +34,14 @@ This is a preventative measure to reduce the frequency of incorrect merges for k
 -   What is the exact data structure of the `decisionLog`?
 -   How does a split affect downstream processes like `TimelineReconstruction`?
 -   What is the confidence threshold for the proactive ID confirmation?
+
+## 3. Merge Approval and System Learning
+
+When a merge is deemed correct (either by automated high-confidence checks or manual user approval), it serves as a positive confirmation that reinforces the system's understanding. This is a critical learning event.
+
+-   **System Action on Approval:**
+    1.  The evidence from the merged `localTrack` (e.g., facial embeddings, appearance vectors) is integrated into the target `globalTrack`. This refines the composite identity of the `globalTrack`, making future matches more accurate.
+    2.  The `decisionLog` for the `globalTrack` is updated to permanently record the merge event.
+
+-   **Grid Update:**
+    -   This newly enriched `globalTrack` data is the source material used to update the system's knowledge base, including the 6x6 grid. The grid is updated to reflect the new, more complete understanding of the identity, including any new faces or associations gained from the merge. This ensures the system's "memory" is current.

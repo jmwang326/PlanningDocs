@@ -16,26 +16,23 @@ This document provides instructions for AI agents working with the MarengoCam pl
 - **Level 5**: Bootstrap strategy (concurrent learning workflow)
 - **Level 6**: Deployment plan (phased rollout, gates, risks)
 
-**Reference Level (L10):**
-- **Level 10**: Nomenclature (terminology reference, the "dictionary")
+**Technical Specification Levels (L{N}T):**
+- `L{N}T` files contain technical specifications (e.g., algorithms, data structures, APIs) for the concepts introduced in the corresponding `L{N}` document.
+- **L1T**: Terminology and nomenclature reference (the project "dictionary").
+- **L2T**: Technical architecture specifications.
+- **L3T**: Implementation specifications for L3 tactical components.
+- **L4T**: Implementation specifications for L4 concepts.
 
-**Implementation Spec Levels (L13-L14):**
-- **Level 13**: Implementation specs for L3 components (algorithms, detailed behavior)
-- **Level 14**: Implementation specs for L4 concepts (data structures, APIs, schemas)
-
-**Pattern:** L3 tactical → L13 implementation specs, L4 concepts → L14 implementation specs
+**Pattern:** `L{N}` (Strategic/Tactical) → `L{N}T` (Technical Specification)
 
 **Code:** Lives outside this framework (separate repo/directory)
 
-**Note:** L11, L12, L15+ are not used. We skip directly from strategic planning to implementation specs.
-
 ### Naming Conventions
-- Core documents: `L{N}_{Topic}.md`
-  - Example: `L1_Mission.md`, `L2_Strategy.md`, `L3_Tracking.md`
-- Discourse documents: `L{N}D_{Topic}.md`
-  - Example: `L1D_Mission.md`, `L3D_Tracking.md`
+- Core documents: `L{N}_{Topic}.md` or `L{N}T_{Topic}.md`
+  - Example: `L1_Mission.md`, `L2T_Architecture.md`, `L3_EvidenceProcessing.md`
+- Discourse documents: `L{N}D_{Topic}.md` or `L{N}TD_{Topic}.md`
+  - Example: `L1D_Mission.md`, `L3TD_Database.md`
 - Avoid redundant words in filenames (e.g., use `L3_Tracking.md` not `L3_Tactics_Tracking.md`)
-- Level 10 is special: `L10_Nomenclature.md` (standalone terminology reference)
 
 ### Discourse Files (D-files)
 - Paired with each level file
@@ -112,7 +109,7 @@ Split a level into multiple files when:
 - Naming pattern: `L{N}_{Component}.md` + `L{N}D_{Component}.md`
 
 ### Directory Structure
-- **Root**: All active Level files and D-files (L0-L13, L{N}D)
+- **Root**: All active Level files and D-files (L0-L6, L{N}T, L{N}D)
 - **deprecated/**: Old documentation being replaced
 - **decisions/**: Architecture Decision Records (ADRs) - specific technical choices
   - Example: YOLO11_MIGRATION_ANALYSIS.md, PREPOPULATION_STRATEGY.md
@@ -130,7 +127,7 @@ Split a level into multiple files when:
 - Discourse with user before major changes
 - Maintain consistency across levels
 - Update corresponding D-files with decision rationale
-- Ensure technical levels (11-13) align with tactical levels (2-3)
+- Ensure technical specifications (L{N}T files) align with their corresponding L{N} files.
 
 ### 3. Consistency Requirements
 - Each level must be internally consistent
@@ -207,9 +204,9 @@ Split a level into multiple files when:
 **What belongs:** Sequence, gates, risks. Observable success criteria per phase.
 **What doesn't:** Timelines (voodoo), tool lists (obvious), metrics tables (fake data)
 
-### Level 11-13 (Technical)
-**What belongs:** APIs, data structures, algorithms, schemas, code specs
-**What doesn't:** Philosophy or strategy (that's L1-L3)
+### L{N}T Files (Technical Specifications)
+**What belongs:** APIs, data structures, algorithms, schemas, and other technical specifications that provide concrete implementation details for the concepts described in the corresponding `L{N}` files.
+**What doesn't:** Philosophy or strategy (that belongs in L1-L3).
 
 ## Version Control
 - **Level 0 evolves continuously** - rewrite as framework clarifies

@@ -45,6 +45,13 @@ if travel_time < grid[(camera_A, camera_B)][exit_cell][entry_cell]:
 
 ---
 
+## Learning Triggers
+
+The grid learning process is triggered whenever a merge is validated. Before updating the grid model, the system confirms the merge meets the "Clean Data" criteria below. A merge is considered **validated** if it originates from one of two sources:
+
+1.  **High-Confidence Auto-Merge:** An automatic merge triggered by a face recognition match with a confidence of ≥ 0.75.
+2.  **Manual Approval:** A merge explicitly approved by a human reviewer via the Review Panel.
+
 ## Clean Data Only
 
 **Include:**
