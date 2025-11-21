@@ -4,28 +4,27 @@
 
 ## Purpose
 
-The `SystemHealth` component is a passive monitoring and alerting system that runs alongside the main processing pipeline. Its purpose is to provide real-time visibility into the performance and reliability of the entire MarengoCam application, detect issues before they become critical, and trigger alerts or automated remediation actions.
+The `SystemHealth` component ensures the system remains stable and responsive, even under heavy load or failure conditions. It is responsible for monitoring critical metrics and triggering "Survival Mode" when necessary.
 
-## High-Level Process
+## Functional Requirements
 
-The `SystemHealth` monitor continuously collects metrics and logs from all other components. It aggregates this data to track key performance indicators (KPIs) and compares them against predefined thresholds.
+### 1. Performance Monitoring
+**Goal:** Detect when the system is falling behind reality.
 
-## Key Monitored Metrics
+*   **Requirement:** The system must track **Processing Lag** (Time difference between `Event Occurred` and `Event Processed`).
+*   **Requirement:** The system must track **Queue Depth** (Number of pending items in the Review Queue).
 
-The health of the system is understood by monitoring a few critical KPIs:
+### 2. Automated Remediation (Survival Mode)
+**Goal:** Prevent a total system crash during overload (e.g., "The Party" scenario).
 
-1.  **Processing Lag:** The delay between an event happening on camera and it being fully processed. This is the primary indicator of overall system load and throughput.
+*   **Requirement:** If `Processing Lag` exceeds a critical threshold (e.g., 30s), the system must automatically degrade fidelity to recover speed.
+    *   *Action:* Reduce YOLO frame rate (e.g., 10fps -> 2fps).
+    *   *Action:* Disable expensive Re-ID embedding generation for low-confidence tracks.
+*   **Requirement:** If `Queue Depth` exceeds a critical threshold (e.g., 100 items), the system must stop adding low-value items.
+    *   *Action:* Auto-archive "Unknown/Uncertain" tracks without human review.
 
-2.  **Queue Depths:** The number of items waiting in the `IdentityResolver`'s merge queue and the `EvidenceProcessor`'s review queue. This indicates the scale of uncertainty the system is dealing with.
+### 3. Failure Detection
+**Goal:** Detect hardware or network failures.
 
-3.  **Auto-Merge Rate:** The percentage of tracks that are merged automatically without needing human or LLM review. This is the primary measure of the system's intelligence and learning progress.
-
-4.  **Resource Utilization:** Metrics such as GPU utilization, disk I/O, and database query performance. These help identify hardware or infrastructure bottlenecks.
-
-## Core Features
-
--   **Health Dashboard:** A web-based UI that provides a real-time and historical view of all key metrics, allowing an operator to quickly assess the system's status.
-
--   **Alerting:** A multi-level alerting system (Info, Warning, Critical) that sends notifications through various channels (logs, email) when metrics deviate from their target ranges.
-
--   **Automatic Remediation:** A set of self-healing rules that can take action to prevent cascading failures during load spikes, such as by dynamically reducing the processing frame rate.
+*   **Requirement:** The system must detect if a camera stream has stopped providing frames ("Sensor Blackout").
+*   **Requirement:** The system must detect if the GPU is unreachable or stuck.

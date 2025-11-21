@@ -48,9 +48,44 @@ To ensure clarity and prevent context drift, you will adhere to the following co
 
 For any multi-step objective, we will liberally use a visible TODO list to track progress.
 
-1.  **Initialization:** At the start of a new objective, I will create a checklist of the high-level tasks involved.
-2.  **Execution:** I will mark tasks as `in-progress` as I begin work and `completed` as we finish them.
-3.  **Purpose:** This provides a persistent, at-a-glance view of the overall plan, our current focus, and what's next, ensuring we remain aligned.
+## Current Phase: Refactoring to Component Specs (GeminiProposal2)
+
+**Objective:** Transition from the fragmented `Lx`/`LxT` structure to a "Buildable" Component Specification structure (`00` through `05`).
+
+**Philosophy:**
+- **Consolidation:** Merge "Human" (Why) and "Technical" (How) into single Component Specs.
+- **Precision:** Move from "we need a table" to `CREATE TABLE`. Move from "we need a class" to `class Interface:`.
+- **Completeness:** Ensure every component has a defined Input, Process, Output, and Configuration.
+
+**Roadmap:**
+
+1.  **00_Architecture.md (The Map)**
+    - Define the high-level Hub-and-Spoke graph.
+    - Define the "Event Bus" vs "Direct Call" boundaries.
+    - *New:* Define the Deployment View (Docker containers).
+
+2.  **01_DataModel.md (The Vocabulary)**
+    - **Schema:** Full SQL DDL for `GridLink`, `Evidence`, `LocalTrack`, `CameraPairSummary`.
+    - **Types:** Pydantic/JSON schemas for inter-service messages.
+    - **Storage:** Define exactly *where* each piece lives (Postgres vs Redis vs In-Memory).
+
+3.  **02_Component_IdentityResolver.md (The Brain)**
+    - **Algorithm:** Exact steps for `resolve(track)`.
+    - **Logic:** The "Triangle Inequality" rejection logic (from Stress Tests).
+    - **Logic:** The "Bloom Filter" fast-fail logic.
+
+4.  **03_Component_ChunkProcessor.md (The Worker)**
+    - **State Machine:** Lifecycle of a `Chunk` (Recording -> Processing -> Evidence -> Archiving).
+    - **Interface:** Inputs (BlueIris, MQTT) and Outputs (Evidence DB).
+
+5.  **04_Component_SystemHealth.md (The Immune System)**
+    - **Survival Mode:** Concrete triggers (e.g., "Queue > 100 items", "Lag > 5s").
+    - **Actions:** Specific load-shedding steps (e.g., "Drop B-frames", "Disable Face Rec").
+    - **Metrics:** List of specific metrics to export.
+
+6.  **05_Configuration.md (The Controls)**
+    - **Schema:** Full `config.yaml` structure.
+    - **Secrets:** Handling of passwords/keys.
 
 ### Step 1: Define the Objective
 

@@ -1,21 +1,12 @@
 # L3T: GUI Technical Details
 
-This document provides the specific technical details for the GUI and presentation layer.
-
----
-
-## Technology Stack
-
--   **Backend API:** A Python-based framework such as **FastAPI** or **Flask** will serve the REST API.
--   **Frontend:** A modern JavaScript framework such as **React** or **Vue.js** will be used to build the single-page applications.
--   **Real-time Communication:** **WebSockets** will be used to push real-time updates to the Health Dashboard and Review Queue.
--   **CLI Tools:** The **Click** or **Typer** library will be used for building command-line interface tools.
+This document provides the technical API contracts for the GUI layer. It defines the data exchange format, not the visual implementation.
 
 ---
 
 ## API Architecture
 
-The system exposes a RESTful API to be consumed by the frontend applications.
+The system exposes a RESTful API to be consumed by any frontend (Web, CLI, or Mobile).
 
 ### Key Endpoint Groups
 
@@ -42,59 +33,35 @@ The system exposes a RESTful API to be consumed by the frontend applications.
 
 ---
 
-## Development Phases
+## Data Payloads
 
-The GUI components will be developed in phases to align with the overall system bootstrap and refinement process.
+### Review Panel Payload (`GET /api/queue/{track_id}/panel`)
 
--   **Phase 1 (Essential for Bootstrap):**
-    -   Review Queue Interface
-    -   System Health Dashboard
-    -   CLI for status checks
+```json
+{
+  "target_track": {
+    "id": 101,
+    "camera": "Driveway",
+    "timestamp": "2023-10-27T14:30:00Z",
+    "crop_urls": ["/img/101_1.jpg", "/img/101_2.jpg"]
+  },
+  "candidates": [
+    {
+      "agent_id": 55,
+      "reason": "Grid Match (0.4s)",
+      "confidence": 0.65,
+      "crop_urls": ["/img/agent55_best.jpg"]
+    }
+  ]
+}
+```
 
--   **Phase 2 (Production & Usability):**
-    -   Timeline Viewer
-    -   Web-based Configuration Tool
-    -   Grid Visualization Tool (for debugging)
+### Review Decision Payload (`POST /api/queue/{track_id}/review`)
 
--   **Phase 3 (Refinement):**
-    -   Face Library Management Interface
-    -   Advanced analytics and reporting features
-
----
-
-## Review Panel Interface
-
-**Purpose:** Efficiently answer "Does this track belong to this candidate?"
-
-**Features:**
--   **Visual Comparison:** Side-by-side view of `Uncertain Track` vs `Candidate` (best 6 frames).
--   **Evidence Summary:** Narrative explanation of system logic (e.g., "Timing plausible," "Face match low").
--   **Actions:** `Merge`, `Reject`, `Create New Agent`, `Skip`.
-
-**LLM Interface:**
--   LLMs receive *only* the visual comparison panels.
--   LLMs are blind to logical/temporal metadata to prevent hallucination.
-
----
-
-## Timeline Viewer
-
-**Purpose:** Reconstruct agent journeys and surface uncertainty.
-
-**Features:**
--   **Narrative View:** Chronological list of events for a specific `GlobalAgent`.
--   **Uncertainty Markers:** Clearly flag events with low confidence.
--   **Drill-down:** Click any event to view the source video clip.
--   **Filtering:** Filter by date, time, camera, or confidence level.
-
----
-
-## Health Dashboard
-
-**Purpose:** Real-time system status and long-term learning metrics.
-
-**Key Metrics:**
--   **Processing Lag:** Time from real-world event to digital record.
--   **Auto-Merge Rate:** % of decisions made without human help (Learning Curve).
--   **Queue Depths:** Review Queue and Merge Queue sizes.
--   **Alerts:** Proactive warnings for saturation or failures.
+```json
+{
+  "decision": "merge", // or "reject", "new_agent"
+  "target_agent_id": 55, // Required if decision is "merge"
+  "reviewer_id": "user_jmwang"
+}
+```
