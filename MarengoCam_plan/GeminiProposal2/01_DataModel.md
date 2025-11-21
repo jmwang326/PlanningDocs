@@ -69,6 +69,12 @@ CREATE TABLE local_tracks (
     camera_id VARCHAR(50) REFERENCES cameras(id),
     global_entity_id INTEGER REFERENCES global_entities(id), -- NULL if unknown
     
+    -- Temporal Linking (within the same camera)
+    -- The TemporalLinker component is responsible for populating these fields,
+    -- likely using an overlap buffer to link consecutive tracks.
+    previous_track_id VARCHAR(64), -- The ID of the track segment before this one
+    next_track_id VARCHAR(64),     -- The ID of the track segment after this one
+
     start_time TIMESTAMP NOT NULL,
     end_time TIMESTAMP NOT NULL,
     
@@ -106,10 +112,24 @@ CREATE TABLE evidence (
 );
 ```
 
+#### `identity_candidates` (The "Possibilities")
+Stores potential identities for a track when the system is uncertain.
+```sql
+CREATE TABLE identity_candidates (
+    local_track_id VARCHAR(64) REFERENCES local_tracks(id),
+    global_entity_id INTEGER REFERENCES global_entities(id),
+    
+    reason VARCHAR(50),         -- "grid_match", "appearance_similarity", "face_low_confidence"
+    confidence FLOAT,           -- A score for this specific candidacy
+    
+    PRIMARY KEY (local_track_id, global_entity_id)
+);
+```
+
 ### 2.3. The "Brain" (Grid Learning)
 
 #### `grid_links` (Spatial Logic)
-Stores the learned travel times between zones.
+Stores the learned transitions and heuristics between camera zones. This is not for statistical timing but for establishing likely paths.
 ```sql
 CREATE TABLE grid_links (
     from_camera VARCHAR(50),
@@ -117,9 +137,10 @@ CREATE TABLE grid_links (
     to_camera VARCHAR(50),
     to_zone VARCHAR(20),
     
-    sample_count INTEGER DEFAULT 0,
-    avg_time_seconds FLOAT,
-    std_dev_seconds FLOAT,
+    -- This relationship is considered a valid, learned path.
+    -- Further specification is required for fields relating to
+    -- travel time or probability, which can be added later.
+    is_valid_path BOOLEAN DEFAULT TRUE,
     
     last_updated TIMESTAMP,
     
@@ -141,7 +162,14 @@ CREATE TABLE audit_logs (
     target_type VARCHAR(20),    -- "global_entity", "local_track"
     target_id VARCHAR(64),
     
-    details JSONB               -- {"reason": "Face match 0.98", "previous_id": 12}
+    details JSONB               -- Flexible details. For MERGE, schema is:
+                                -- {
+                                --   "reason": "face_match",
+                                --   "confidence": 0.98,
+                                --   "retained_entity_id": 10,
+                                --   "consumed_entity_id": 25,
+                                --   "is_reverted": false
+                                -- }
 );
 ```
 

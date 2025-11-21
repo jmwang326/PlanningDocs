@@ -12,21 +12,14 @@ The `IdentityResolver` is the core logic engine that converts fragmented `LocalT
 
 ## 1. Interface Contract
 
-### 1.1. Input
-The `ChunkProcessor` calls this after finishing a track.
-```python
-def resolve_identity(new_track: LocalTrack) -> IdentityResult:
-    """
-    Input: A finished LocalTrack with start/end times, zones, and optional embeddings.
-    Output: The GlobalEntityID assigned to this track.
-    """
-```
+### 1.1. Input Trigger
+The `IdentityResolver` service continuously polls the `local_tracks` table for new records where `global_entity_id` is `NULL`. It processes these records in batches.
 
 ### 1.2. Output
-Updates the `local_tracks` table:
-- Sets `global_entity_id`.
-- Sets `merge_reason` (e.g., "face_match", "spatial_link").
-- Sets `confidence` (0.0 to 1.0).
+For each processed `local_track`, the service updates the row in the `local_tracks` table:
+- Sets `global_entity_id` to either a new or an existing entity.
+- Writes the justification for the decision to the `audit_logs` table (e.g., "MERGE", "NEW").
+- May create a new `global_entities` record if no match is found.
 
 ---
 
@@ -65,13 +58,11 @@ Did the person walk from Camera A to Camera B?
 1.  Query `local_tracks` on **All Cameras**.
 2.  Filter: `end_time` is before `new_start`.
 3.  Loop through candidates:
-    - Check `grid_links` table for row `(candidate.cam, candidate.exit, new.cam, new.entry)`.
-    - **Constraint:** If no row exists, **SKIP** (Direct Link Only).
-    - Get `avg_time` and `std_dev`.
-    - Calculate `travel_time = new.start - candidate.end`.
-    - Score: `Z-Score = abs(travel_time - avg_time) / std_dev`.
+    - Check `grid_links` table for a valid transition path.
+    - **Constraint:** If no path exists, **SKIP** (Direct Link Only).
+    - **Constraint:** The time between tracks must be within a plausible range (e.g., 1s to 60s). This requires further specification.
 4.  **Decision:**
-    - If `Z-Score < 2.0` (within 2 sigma): **Candidate for Merge**.
+    - If a single, plausible candidate is found: **Candidate for Merge**.
     - If multiple candidates: **Ambiguous -> Create New Identity**.
     - If single strong candidate: **Return (AUTO-MERGE).**
 

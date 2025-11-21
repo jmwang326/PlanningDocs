@@ -6,7 +6,7 @@ Defines the physical and logical layout of MarengoCam, with a primary focus on *
 ## 1. High-Level Topology
 
 ### 1.1. The "Hub and Spoke" Data Flow
-- **Hub:** PostgreSQL (State) + Filesystem (Media).
+- **Hub:** PostgreSQL (State) + Filesystem (Media). The database runs in its own container and is managed by the Docker Compose supervisor.
 - **Spokes:** Independent Python processes (Services).
 - **Bus:** Redis (Optional, for fast IPC) or Polling (Simpler).
 
